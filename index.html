@@ -565,6 +565,15 @@ tr:last-child td{border-bottom:none}
     <div class="callout"><b>Note:</b> Apple Podcasts does not expose subscriber counts. Use the Buzzsprout or Libsyn API, or enter a manual count.</div>
   </div>
 
+  <!-- Data Proxy -->
+  <div class="card settings-sec">
+    <h3>Data Proxy</h3>
+    <span class="status"><span class="dot dot-off" id="stProxy"></span><span id="stProxyTxt">Not set</span></span>
+    <label>Proxy Base URL</label><input type="text" id="proxyBase" placeholder="https://your-site.netlify.app">
+    <div class="save-row"><button class="btn btn-sm" onclick="saveProxy()">Save</button></div>
+    <div class="callout"><b>What this is:</b> Simplero and HubSpot block direct calls from a web page. This is the free Netlify proxy that fixes that. Paste the Netlify URL here and both pull through it, with the keys kept safe on Netlify. Setup steps are in the abp-dashboard-proxy README.</div>
+  </div>
+
   <!-- Goals -->
   <div class="card settings-sec">
     <h3>Goals</h3>
@@ -641,6 +650,7 @@ if(!K){
     hsToken:CFG.hubspot?.privateAppToken||'',
     trKey:CFG.trello?.apiKey||'',trToken:CFG.trello?.token||'',trBoard:CFG.trello?.boardId||'',
     podPlatform:CFG.podcast?.platform||'buzzsprout',podKey:CFG.podcast?.apiKey||'',podId:CFG.podcast?.podcastId||'',podManual:'',
+    proxyBase:'',
     goals:{email:CFG.goals?.email||1000,ig:CFG.goals?.ig||50000,podcast:CFG.goals?.podcast||5000,youtube:CFG.goals?.youtube||10000}
   };
 }
@@ -879,9 +889,12 @@ async function syncInstagram(){
   }catch(e){setStatus('Ig',false,'Token may be expired. Refresh in Meta Business Suite.');toast('Instagram sync failed. Token may be expired, refresh in Meta Business Suite.');}
 }
 async function syncHubspot(){
-  if(!K.hsToken){toast('Add HubSpot token first');document.getElementById('hsPipeline').innerHTML='<p class="muted">Not connected. Add your token in Settings.</p>';return;}
+  const useProxy=!!K.proxyBase;
+  if(!useProxy&&!K.hsToken){toast('Add HubSpot token first, or set a Proxy Base URL');document.getElementById('hsPipeline').innerHTML='<p class="muted">Not connected. Add your token in Settings.</p>';return;}
   try{
-    const r=await fetch('https://api.hubapi.com/crm/v3/objects/deals?limit=100&properties=dealstage',{headers:{Authorization:'Bearer '+K.hsToken}});
+    const r=useProxy
+      ? await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/hubspot`)
+      : await fetch('https://api.hubapi.com/crm/v3/objects/deals?limit=100&properties=dealstage',{headers:{Authorization:'Bearer '+K.hsToken}});
     const j=await r.json();
     if(j.status==='error') throw new Error(j.message);
     const stages={};let total=0;
@@ -913,9 +926,13 @@ async function syncTrello(){
   }catch(e){setStatus('Tr',false,'Error');toast('Trello sync failed. Check keys and Board ID.');}
 }
 async function syncSimplero(){
-  if(!K.simpKey||!K.simpAlchemy){toast('Add Simplero key and Alchemy list ID first');return;}
+  const useProxy=!!K.proxyBase;
+  if(!K.simpAlchemy){toast('Add your Alchemy list ID first');return;}
+  if(!useProxy&&!K.simpKey){toast('Add Simplero key, or set a Proxy Base URL');return;}
   try{
-    const r=await fetch(`https://simplero.com/api/v1/lists/${K.simpAlchemy}/subscriptions?api_key=${K.simpKey}&status=active`);
+    const r=useProxy
+      ? await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/simplero?listId=${K.simpAlchemy}&status=active`)
+      : await fetch(`https://simplero.com/api/v1/lists/${K.simpAlchemy}/subscriptions?api_key=${K.simpKey}&status=active`);
     if(!r.ok) throw new Error('http');
     const j=await r.json();
     const count=Array.isArray(j)?j.length:(j.count||0);
@@ -1137,7 +1154,10 @@ function loadSettings(){
   set('trKey',K.trKey);set('trToken',K.trToken);set('trBoard',K.trBoard);
   set('podPlatform',K.podPlatform);set('podKey',K.podKey);set('podId',K.podId);set('podManual',K.podManual);set('podGoal',K.goals.podcast);
   set('goalEmail',K.goals.email);set('goalIg',K.goals.ig);set('goalPod',K.goals.podcast);set('goalYt',K.goals.youtube);
+  set('proxyBase',K.proxyBase);
+  if(K.proxyBase) setStatus('Proxy',true,'Set');
 }
+function saveProxy(){K.proxyBase=val('proxyBase').replace(/\/$/,'');saveKeys();setStatus('Proxy',!!K.proxyBase,K.proxyBase?'Set':'Not set');toast(K.proxyBase?'Proxy URL saved':'Proxy URL cleared');}
 const val=id=>document.getElementById(id).value.trim();
 function saveYt(){K.ytKey=val('ytKey');K.ytChan=val('ytChan');K.goals.youtube=Number(val('ytGoal'))||K.goals.youtube;saveKeys();renderMetrics();toast('YouTube settings saved');}
 function saveIg(){K.igToken=val('igToken');K.igUser=val('igUser');K.goals.ig=Number(val('igGoal'))||K.goals.ig;saveKeys();renderMetrics();toast('Instagram settings saved');}
