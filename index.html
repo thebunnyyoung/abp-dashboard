@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Better Place Consulting Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style>
+:root{
+  --teal:#88CCC6;
+  --navy:#273945;
+  --mint:#D9E9E4;
+  --offwhite:#F3F3EE;
+  --peach:#F9AD84;
+  --coral:#D85A30;
+  --white:#ffffff;
+  --ink:#273945;
+  --muted:#6b7c85;
+  --line:#e2e6e1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'DM Sans',system-ui,sans-serif;
+  background:var(--offwhite);
+  color:var(--ink);
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;line-height:1.15;color:var(--navy)}
+h1{font-size:2rem}
+h2{font-size:1.6rem}
+h3{font-size:1.3rem}
+a{color:var(--coral);text-decoration:none}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none}
+input,textarea,select{font-family:'DM Sans',sans-serif;font-size:.95rem}
+
+/* ---------- Nav ---------- */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:var(--navy);
+  color:var(--offwhite);
+  padding:0 24px;
+  box-shadow:0 2px 14px rgba(39,57,69,.18);
+}
+.nav-top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 0 0;flex-wrap:wrap;gap:12px;
+}
+.brand{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--offwhite);letter-spacing:.3px}
+.brand .accent{color:var(--teal)}
+.nav-actions{display:flex;align-items:center;gap:14px}
+.sync-all{
+  background:var(--teal);color:var(--navy);font-weight:600;
+  padding:9px 18px;border-radius:999px;font-size:.9rem;
+  transition:transform .12s ease,box-shadow .12s ease;
+}
+.sync-all:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(136,204,198,.35)}
+.sync-all:active{transform:translateY(0)}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:14px 0 0;margin-top:6px}
+.tab{
+  background:transparent;color:var(--mint);
+  padding:10px 16px;border-radius:8px 8px 0 0;font-size:.9rem;font-weight:500;
+  white-space:nowrap;opacity:.72;border-bottom:3px solid transparent;
+}
+.tab:hover{opacity:1}
+.tab.active{opacity:1;color:var(--white);border-bottom-color:var(--teal);background:rgba(255,255,255,.05)}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+.panel{display:none}
+.panel.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.section-title{margin:6px 0 18px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.section-title .sub{font-family:'DM Sans';font-size:.85rem;color:var(--muted);font-weight:400}
+
+/* ---------- Hero strip ---------- */
+.hero{
+  background:var(--navy);border-radius:16px;padding:22px 20px;
+  display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:26px;
+}
+.hero-stat{text-align:center;padding:6px 4px;border-right:1px solid rgba(255,255,255,.08)}
+.hero-stat:last-child{border-right:none}
+.hero-stat .num{font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--teal);font-weight:600;line-height:1}
+.hero-stat .lbl{color:var(--mint);font-size:.72rem;text-transform:uppercase;letter-spacing:.6px;margin-top:8px;opacity:.85}
+
+/* ---------- Cards ---------- */
+.grid{display:grid;gap:18px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.card{
+  background:var(--white);border:1px solid var(--line);border-radius:14px;padding:20px;
+  box-shadow:0 1px 3px rgba(39,57,69,.05);
+}
+.card h3{margin-bottom:4px}
+.card .card-sub{font-size:.82rem;color:var(--muted);margin-bottom:14px}
+.metric-num{font-family:'Cormorant Garamond',serif;font-size:2.4rem;color:var(--navy);font-weight:600;line-height:1}
+.metric-goal{font-size:.82rem;color:var(--muted);margin:2px 0 12px}
+.synced{font-size:.72rem;color:var(--muted);margin-top:10px}
+
+/* progress */
+.bar{height:10px;background:var(--mint);border-radius:999px;overflow:hidden}
+.bar > span{display:block;height:100%;background:var(--teal);border-radius:999px;width:0;transition:width .5s ease}
+.bar.peach > span{background:var(--peach)}
+.bar.coral > span{background:var(--coral)}
+.bar.navy > span{background:var(--navy)}
+
+/* ---------- Buttons ---------- */
+.btn{background:var(--teal);color:var(--navy);font-weight:600;padding:9px 16px;border-radius:8px;font-size:.88rem;transition:filter .12s}
+.btn:hover{filter:brightness(1.05)}
+.btn-outline{background:transparent;border:1.5px solid var(--navy);color:var(--navy)}
+.btn-coral{background:var(--coral);color:var(--white)}
+.btn-sm{padding:6px 12px;font-size:.8rem}
+.btn-ghost{background:var(--mint);color:var(--navy)}
+
+/* ---------- Inputs ---------- */
+label{display:block;font-size:.8rem;font-weight:600;color:var(--navy);margin:12px 0 5px}
+input[type=text],input[type=number],input[type=password],textarea,select{
+  width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--offwhite);color:var(--ink);
+}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--teal);outline-offset:0;background:var(--white)}
+textarea{resize:vertical;min-height:70px}
+.inline-num{max-width:110px;display:inline-block}
+
+/* ---------- Programs quick view ---------- */
+.qv-row{display:flex;align-items:center;gap:14px;padding:11px 0;border-bottom:1px solid var(--line)}
+.qv-row:last-child{border-bottom:none}
+.qv-name{flex:0 0 150px;font-weight:600;font-size:.9rem}
+.qv-bar{flex:1}
+.qv-nums{flex:0 0 90px;text-align:right;font-size:.85rem;color:var(--muted)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 auto}
+
+/* ---------- Accordion ---------- */
+.acc{border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden;background:var(--white)}
+.acc-head{
+  display:flex;align-items:center;gap:14px;padding:18px 20px;cursor:pointer;user-select:none;
+  border-left:6px solid var(--teal);
+}
+.acc-head.peach{border-left-color:var(--peach)}
+.acc-head.coral{border-left-color:var(--coral)}
+.acc-head.navy{border-left-color:var(--navy)}
+.acc-head h3{margin:0}
+.acc-head .meta{margin-left:auto;text-align:right;font-size:.82rem;color:var(--muted)}
+.acc-head .countdown{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--navy);font-weight:600;line-height:1}
+.acc-head .chev{font-size:1rem;color:var(--muted);transition:transform .2s;margin-left:6px}
+.acc.open .chev{transform:rotate(90deg)}
+.acc-body{display:none;padding:4px 20px 22px}
+.acc.open .acc-body{display:block}
+.acc-body .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+.pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:.72rem;font-weight:600;letter-spacing:.3px}
+.pill-teal{background:var(--mint);color:var(--navy)}
+.pill-peach{background:var(--peach);color:var(--navy)}
+.pill-coral{background:var(--coral);color:var(--white)}
+.pill-navy{background:var(--navy);color:var(--offwhite)}
+.hot-label{color:var(--coral);font-weight:600;font-size:.85rem}
+
+/* ---------- Tables ---------- */
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{text-align:left;padding:10px 12px;background:var(--mint);color:var(--navy);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.4px}
+th:first-child{border-radius:8px 0 0 0}
+th:last-child{border-radius:0 8px 0 0}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.edit-cell{background:transparent;border:1px solid transparent;padding:5px 7px;border-radius:6px;width:100%}
+.edit-cell:hover{border-color:var(--line)}
+.edit-cell:focus{border-color:var(--teal);background:var(--white)}
+
+/* ---------- Kanban ---------- */
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kcol{background:var(--mint);border-radius:12px;padding:14px;min-height:180px}
+.kcol h4{font-family:'DM Sans';font-size:.82rem;text-transform:uppercase;letter-spacing:.5px;color:var(--navy);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.kcard{background:var(--white);border-radius:9px;padding:10px 12px;margin-bottom:9px;box-shadow:0 1px 2px rgba(39,57,69,.06);font-size:.85rem}
+.kcard .kname{font-weight:600}
+.kcard .knote{color:var(--muted);font-size:.78rem;margin-top:3px}
+.kcard .kdel{float:right;color:var(--muted);cursor:pointer;font-size:.85rem}
+.kadd{width:100%;background:var(--white);border:1px dashed var(--teal);color:var(--navy);padding:8px;border-radius:8px;font-size:.82rem;font-weight:600}
+
+/* ---------- Task list ---------- */
+.task{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.task:last-child{border-bottom:none}
+.task .pr{width:8px;height:8px;border-radius:50%;margin-top:7px;flex:0 0 auto}
+.pr-high{background:var(--coral)}
+.pr-med{background:var(--peach)}
+.pr-low{background:var(--teal)}
+.task .tx{flex:1;font-size:.9rem}
+.task .tdel{color:var(--muted);cursor:pointer}
+.check{display:flex;align-items:center;gap:10px;padding:9px 0;font-size:.9rem;cursor:pointer}
+.check input{width:auto}
+
+/* ---------- Status indicators ---------- */
+.status{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;color:var(--muted)}
+.status .dot{width:9px;height:9px}
+.dot-off{background:#c9d0cc}
+.dot-on{background:var(--teal)}
+.dot-err{background:var(--coral)}
+.callout{background:var(--mint);border-radius:9px;padding:12px 14px;font-size:.82rem;color:var(--navy);margin-top:12px;line-height:1.5}
+.callout b{color:var(--navy)}
+
+/* ---------- Code block ---------- */
+.code{background:var(--navy);color:var(--teal);border-radius:12px;padding:18px 20px;font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:.82rem;line-height:1.7;overflow-x:auto;white-space:pre}
+.code .cmt{color:#7fa39c}
+
+/* ---------- ManyChat cards ---------- */
+.mc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mc-card{background:var(--navy);color:var(--offwhite);border-radius:12px;padding:18px}
+.mc-card h4{color:var(--teal);font-family:'DM Sans';font-size:1rem;letter-spacing:1px;margin-bottom:8px}
+.mc-card p{font-size:.85rem;color:var(--mint);margin-bottom:12px}
+.mc-card .btn{width:100%}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.stack > *+*{margin-top:18px}
+.muted{color:var(--muted);font-size:.85rem}
+.divider{height:1px;background:var(--line);margin:22px 0}
+.settings-sec{margin-bottom:22px}
+.save-row{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:var(--offwhite);padding:12px 22px;border-radius:999px;font-size:.88rem;box-shadow:0 6px 20px rgba(39,57,69,.3);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:200}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+
+@media(max-width:900px){
+  .grid-2,.grid-4,.two-col,.mc-grid{grid-template-columns:1fr}
+  .hero{grid-template-columns:repeat(3,1fr);gap:14px}
+  .hero-stat:nth-child(3){border-right:none}
+  .kanban{grid-template-columns:1fr 1fr}
+  .acc-body .field-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .hero{grid-template-columns:repeat(2,1fr)}
+  .kanban{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav class="nav">
+  <div class="nav-top">
+    <div class="brand">A Better Place <span class="accent">Consulting</span></div>
+    <div class="nav-actions">
+      <span id="lastSyncGlobal" class="muted" style="color:var(--mint)"></span>
+      <button class="sync-all" onclick="syncAll()">Sync All</button>
+    </div>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="programs">Programs &amp; Events</button>
+    <button class="tab" data-tab="leads">Leads</button>
+    <button class="tab" data-tab="tasks">Tasks</button>
+    <button class="tab" data-tab="content">Content</button>
+    <button class="tab" data-tab="team">Team</button>
+    <button class="tab" data-tab="settings">Settings</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<!-- ============ OVERVIEW ============ -->
+<section class="panel active" id="overview">
+  <div class="hero">
+    <div class="hero-stat"><div class="num" id="hEmail">—</div><div class="lbl">Email Subscribers</div></div>
+    <div class="hero-stat"><div class="num" id="hIg">—</div><div class="lbl">Instagram Followers</div></div>
+    <div class="hero-stat"><div class="num" id="hPod">—</div><div class="lbl">Podcast Subscribers</div></div>
+    <div class="hero-stat"><div class="num" id="hYt">—</div><div class="lbl">YouTube Subscribers</div></div>
+    <div class="hero-stat"><div class="num" id="hDefy">—</div><div class="lbl">DEFY Members</div></div>
+    <div class="hero-stat"><div class="num" id="hLeads">—</div><div class="lbl">Open Leads</div></div>
+  </div>
+
+  <div class="grid grid-4" style="margin-bottom:24px">
+    <div class="card">
+      <h3>Email List</h3>
+      <div class="card-sub">Simplero</div>
+      <div class="metric-num" id="mEmail">—</div>
+      <div class="metric-goal">Goal <span id="gEmail">1,000</span></div>
+      <div class="bar"><span id="bEmail"></span></div>
+      <div class="synced" id="sEmail">Not yet connected</div>
+    </div>
+    <div class="card">
+      <h3>Instagram</h3>
+      <div class="card-sub">Meta Graph API</div>
+      <div class="metric-num" id="mIg">—</div>
+      <div class="metric-goal">Goal <span id="gIg">50,000</span></div>
+      <div class="bar peach"><span id="bIg"></span></div>
+      <div class="synced" id="sIg">Not yet connected</div>
+    </div>
+    <div class="card">
+      <h3>Podcast</h3>
+      <div class="card-sub">Yes, And! Podcast</div>
+      <div class="metric-num" id="mPod">—</div>
+      <div class="metric-goal">Goal <span id="gPod">5,000</span></div>
+      <div class="bar"><span id="bPod"></span></div>
+      <div class="synced" id="sPod">Not yet connected</div>
+    </div>
+    <div class="card">
+      <h3>YouTube</h3>
+      <div class="card-sub">YouTube Data API</div>
+      <div class="metric-num" id="mYt">—</div>
+      <div class="metric-goal">Goal <span id="gYt">10,000</span></div>
+      <div class="bar navy"><span id="bYt"></span></div>
+      <div class="synced" id="sYt">Not yet connected</div>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Programs Quick View</h3>
+      <div class="card-sub">Every active container at a glance</div>
+      <div id="qvList"></div>
+    </div>
+    <div class="stack">
+      <div class="card">
+        <h3>FIT Calls This Week</h3>
+        <div class="card-sub">Target 3+ per week</div>
+        <input type="number" id="fitCalls" class="inline-num" min="0" onchange="saveState()">
+        <span class="muted" style="margin-left:10px">booked this week</span>
+      </div>
+      <div class="card">
+        <h3>Gino's Weekly Notes</h3>
+        <div class="card-sub">Backend and automation status</div>
+        <textarea id="ginoNotes" placeholder="What Gino is watching this week..." onchange="saveState()"></textarea>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROGRAMS ============ -->
+<section class="panel" id="programs">
+  <div class="section-title"><h2>Programs &amp; Events</h2><span class="sub">Click any card to expand full details</span></div>
+  <div id="accWrap"></div>
+
+  <div class="card" style="margin-top:24px">
+    <h3>Launch Calendar</h3>
+    <div class="card-sub">Every key date, one view</div>
+    <table>
+      <thead><tr><th>Date</th><th>Event</th><th>Status</th><th>Goal</th><th>Next Action</th></tr></thead>
+      <tbody id="launchCal"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ LEADS ============ -->
+<section class="panel" id="leads">
+  <div class="section-title"><h2>Leads</h2></div>
+  <div class="grid grid-2" style="margin-bottom:24px">
+    <div class="card">
+      <h3>HubSpot Pipeline</h3>
+      <div class="card-sub">Deals grouped by stage</div>
+      <button class="btn btn-sm" onclick="syncHubspot()">Sync HubSpot</button>
+      <div id="hsPipeline" style="margin-top:14px">
+        <p class="muted">Not connected. Add your Private App token in <a href="#" onclick="go('settings');return false">Settings</a>.</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Inbox Lead Intelligence</h3>
+      <div class="card-sub">Scan your inbox for warm leads</div>
+      <button class="btn btn-sm" onclick="showInboxScan()">Show Scan Instructions</button>
+      <div id="inboxScan" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Manual Lead Pipeline</h3>
+    <div class="card-sub">Drag-free kanban. Add a lead to any stage.</div>
+    <div class="kanban" id="leadKanban"></div>
+  </div>
+</section>
+
+<!-- ============ TASKS ============ -->
+<section class="panel" id="tasks">
+  <div class="section-title"><h2>Tasks</h2></div>
+  <div class="two-col">
+    <div class="stack">
+      <div class="card">
+        <h3>Trello</h3>
+        <div class="card-sub">Open cards, color-coded by priority</div>
+        <button class="btn btn-sm" onclick="syncTrello()">Sync Trello</button>
+        <div id="trelloList" style="margin-top:14px"><p class="muted">Not connected. Add Trello keys in <a href="#" onclick="go('settings');return false">Settings</a>.</p></div>
+      </div>
+      <div class="card">
+        <h3>Add Task</h3>
+        <div class="card-sub">Manual, saved to this browser</div>
+        <input type="text" id="taskText" placeholder="What needs doing...">
+        <div class="save-row">
+          <select id="taskPr" style="max-width:150px">
+            <option value="high">High priority</option>
+            <option value="med" selected>Medium priority</option>
+            <option value="low">Low priority</option>
+          </select>
+          <button class="btn btn-sm" onclick="addTask()">Add</button>
+        </div>
+        <div id="taskList" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card">
+        <h3>Gino's Monday Meeting</h3>
+        <div class="card-sub">Pull notes, extract the action items</div>
+        <button class="btn btn-sm" onclick="showFathom()">Pull from Fathom</button>
+        <div id="fathomHelp" style="margin-top:12px"></div>
+        <label>Raw meeting notes</label>
+        <textarea id="meetingNotes" placeholder="Paste Monday meeting notes here..."></textarea>
+        <div class="save-row"><button class="btn btn-sm btn-ghost" onclick="extractTasks()">Extract Tasks</button></div>
+      </div>
+      <div class="card">
+        <h3>Bunny's Weekly 10 Min</h3>
+        <div class="card-sub">The only five things that need your eyes</div>
+        <div id="weeklyChecklist"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTENT ============ -->
+<section class="panel" id="content">
+  <div class="section-title"><h2>Content</h2></div>
+  <div class="card" style="margin-bottom:24px">
+    <h3>Weekly Content Calendar</h3>
+    <div class="card-sub">The rhythm. Edit status pills and notes inline.</div>
+    <table>
+      <thead><tr><th>Day</th><th>Platform</th><th>Pillar</th><th>Owner</th><th>Status</th><th>Notes</th></tr></thead>
+      <tbody id="contentCal"></tbody>
+    </table>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Content Pillars</h3>
+      <div class="card-sub">What each pillar promises</div>
+      <div id="pillars"></div>
+    </div>
+    <div class="card">
+      <h3>ManyChat Keywords</h3>
+      <div class="card-sub">The three live routes</div>
+      <div class="mc-grid" id="mcKeywords"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TEAM ============ -->
+<section class="panel" id="team">
+  <div class="section-title"><h2>Team</h2></div>
+  <div class="two-col" style="margin-bottom:24px">
+    <div class="card">
+      <h3>Gino Friday Checklist</h3>
+      <div class="card-sub">The weekly metrics report</div>
+      <div id="ginoCheck"></div>
+    </div>
+    <div class="card">
+      <h3>Cinthya Per Episode Checklist</h3>
+      <div class="card-sub">Every podcast drop</div>
+      <div id="cinthyaCheck"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>Team Roles</h3>
+    <table>
+      <thead><tr><th>Person</th><th>Role</th><th>Owns</th><th>Cadence</th></tr></thead>
+      <tbody>
+        <tr><td>Gino</td><td>Backend + Automation</td><td>Friday metrics report</td><td>Weekly</td></tr>
+        <tr><td>Cinthya</td><td>Podcast Production</td><td>3 clips per episode</td><td>Per episode</td></tr>
+        <tr><td>Coordinator</td><td>Content Posting</td><td>Content calendar execution</td><td>Daily</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Amplifier Tracker</h3>
+    <div class="card-sub">Up to ten. Red dot means a monthly reminder is due.</div>
+    <table>
+      <thead><tr><th>Name</th><th>Last Activated</th><th>What They Shared</th><th>Est. Conversions</th><th>Reminder</th></tr></thead>
+      <tbody id="amplifiers"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section class="panel" id="settings">
+  <div class="section-title"><h2>Settings</h2><span class="sub">Keys stay in this browser and in config.js locally. Never pushed to GitHub.</span></div>
+
+  <!-- YouTube -->
+  <div class="card settings-sec">
+    <h3>YouTube</h3>
+    <span class="status"><span class="dot dot-off" id="stYt"></span><span id="stYtTxt">Not connected</span></span>
+    <label>API Key</label><input type="password" id="ytKey">
+    <label>Channel ID</label><input type="text" id="ytChan">
+    <label>Subscriber Goal</label><input type="number" id="ytGoal">
+    <div class="save-row">
+      <button class="btn btn-sm" onclick="saveYt()">Save</button>
+      <button class="btn btn-sm btn-outline" onclick="syncYoutube()">Test Connection</button>
+    </div>
+    <div class="callout"><b>Where to get it:</b> console.cloud.google.com then Enable YouTube Data API v3, then Credentials, then create an API Key.</div>
+  </div>
+
+  <!-- Instagram -->
+  <div class="card settings-sec">
+    <h3>Instagram</h3>
+    <span class="status"><span class="dot dot-off" id="stIg"></span><span id="stIgTxt">Not connected</span></span>
+    <label>Access Token</label><input type="password" id="igToken">
+    <label>Business Account User ID</label><input type="text" id="igUser">
+    <label>Follower Goal</label><input type="number" id="igGoal">
+    <div class="save-row">
+      <button class="btn btn-sm" onclick="saveIg()">Save</button>
+      <button class="btn btn-sm btn-outline" onclick="syncInstagram()">Test Connection</button>
+    </div>
+    <div class="callout"><b>Where to get it:</b> Meta Business Suite, then Settings, then System Users. Generate a token with the instagram_basic scope. Token expires every 60 days, so set a calendar reminder to refresh it.</div>
+  </div>
+
+  <!-- Simplero -->
+  <div class="card settings-sec">
+    <h3>Simplero</h3>
+    <span class="status"><span class="dot dot-off" id="stSimp"></span><span id="stSimpTxt">Not connected</span></span>
+    <label>API Key</label><input type="password" id="simpKey">
+    <label>Alchemy List ID</label><input type="text" id="simpAlchemy">
+    <label>DEFY List ID</label><input type="text" id="simpDefy">
+    <label>Subscriber Goal</label><input type="number" id="simpGoal">
+    <div class="save-row">
+      <button class="btn btn-sm" onclick="saveSimp()">Save</button>
+      <button class="btn btn-sm btn-outline" onclick="syncSimplero()">Test Connection</button>
+    </div>
+    <div class="callout"><b>Where to get it:</b> Simplero admin, then Account Settings, then the API tab. A CORS proxy may be needed for browser calls. See the README for the Netlify Functions setup.</div>
+  </div>
+
+  <!-- HubSpot -->
+  <div class="card settings-sec">
+    <h3>HubSpot</h3>
+    <span class="status"><span class="dot dot-off" id="stHs"></span><span id="stHsTxt">Not connected</span></span>
+    <label>Private App Token</label><input type="password" id="hsToken">
+    <div class="save-row">
+      <button class="btn btn-sm" onclick="saveHs()">Save</button>
+      <button class="btn btn-sm btn-outline" onclick="syncHubspot()">Test Connection</button>
+    </div>
+    <div class="callout"><b>Where to get it:</b> HubSpot, then Settings, then Integrations, then Private Apps. Create an app with crm.objects.contacts.read and crm.objects.deals.read scopes. The token starts with pat-na1-.</div>
+  </div>
+
+  <!-- Trello -->
+  <div class="card settings-sec">
+    <h3>Trello</h3>
+    <span class="status"><span class="dot dot-off" id="stTr"></span><span id="stTrTxt">Not connected</span></span>
+    <label>API Key</label><input type="text" id="trKey">
+    <label>Token</label><input type="password" id="trToken">
+    <label>Board ID</label><input type="text" id="trBoard">
+    <div class="save-row">
+      <button class="btn btn-sm" onclick="saveTr()">Save</button>
+      <button class="btn btn-sm btn-outline" onclick="syncTrello()">Test Connection</button>
+    </div>
+    <div class="callout"><b>Where to get it:</b> trello.com/app-key. Copy the API Key, generate the Token from the link on that page, and read the Board ID from the board URL.</div>
+  </div>
+
+  <!-- Podcast -->
+  <div class="card settings-sec">
+    <h3>Podcast</h3>
+    <span class="status"><span class="dot dot-off" id="stPod"></span><span id="stPodTxt">Not connected</span></span>
+    <label>Platform</label>
+    <select id="podPlatform"><option value="buzzsprout">Buzzsprout</option><option value="libsyn">Libsyn</option><option value="manual">Manual</option></select>
+    <label>API Key</label><input type="password" id="podKey">
+    <label>Podcast ID</label><input type="text" id="podId">
+    <label>Manual Count (fallback)</label><input type="number" id="podManual">
+    <label>Subscriber Goal</label><input type="number" id="podGoal">
+    <div class="save-row">
+      <button class="btn btn-sm" onclick="saveePod()">Save</button>
+      <button class="btn btn-sm btn-outline" onclick="syncPodcast()">Test Connection</button>
+    </div>
+    <div class="callout"><b>Note:</b> Apple Podcasts does not expose subscriber counts. Use the Buzzsprout or Libsyn API, or enter a manual count.</div>
+  </div>
+
+  <!-- Goals -->
+  <div class="card settings-sec">
+    <h3>Goals</h3>
+    <div class="field-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px">
+      <div><label>Email Goal</label><input type="number" id="goalEmail"></div>
+      <div><label>IG Followers Goal</label><input type="number" id="goalIg"></div>
+      <div><label>Podcast Goal</label><input type="number" id="goalPod"></div>
+      <div><label>YouTube Goal</label><input type="number" id="goalYt"></div>
+    </div>
+    <div class="save-row"><button class="btn btn-sm" onclick="saveGoals()">Save Goals</button></div>
+  </div>
+
+  <!-- GitHub deploy -->
+  <div class="card settings-sec">
+    <h3>GitHub Deployment</h3>
+    <div class="card-sub">First push. Run these from inside the abp-dashboard folder.</div>
+    <div class="code"><span class="cmt"># config.js is never added, so keys stay private</span>
+git init
+git add index.html README.md .gitignore
+git commit -m "Initial ABP dashboard"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/abp-dashboard.git
+git push -u origin main</div>
+    <div class="callout" style="margin-top:14px"><b>Then turn on GitHub Pages:</b> your repo on GitHub, then Settings, then Pages. Source: Deploy from a branch. Branch: main. Folder: / (root). Save. Two minutes later the dashboard is live at https://YOUR_USERNAME.github.io/abp-dashboard</div>
+    <div class="card-sub" style="margin-top:16px">Weekly update after that:</div>
+    <div class="code">git add index.html README.md
+git commit -m "Weekly update"
+git push</div>
+  </div>
+</section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= CONFIG + STATE ================= */
+const CFG = window.ABP_CONFIG || {goals:{}};
+const TODAY = new Date();
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function fmt(n){return (n===null||n===undefined||n==='—')?'—':Number(n).toLocaleString('en-US');}
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const d=new Date(dateStr);d.setHours(0,0,0,0);
+  const t=new Date();t.setHours(0,0,0,0);
+  return Math.ceil((d-t)/86400000);
+}
+
+/* localStorage-backed store */
+const STORE_KEY='abp_dashboard_v1';
+let S = JSON.parse(localStorage.getItem(STORE_KEY)||'{}');
+function saveState(){
+  // pull loose inputs into S before saving
+  S.fitCalls=document.getElementById('fitCalls').value;
+  S.ginoNotes=document.getElementById('ginoNotes').value;
+  localStorage.setItem(STORE_KEY,JSON.stringify(S));
+}
+function setS(k,v){S[k]=v;localStorage.setItem(STORE_KEY,JSON.stringify(S));}
+
+/* settings store (keys) */
+const KEY_STORE='abp_dashboard_keys_v1';
+let K = JSON.parse(localStorage.getItem(KEY_STORE)||'null');
+if(!K){
+  // seed from config.js on first load
+  K={
+    ytKey:CFG.youtube?.apiKey||'',ytChan:CFG.youtube?.channelId||'',
+    igToken:CFG.instagram?.accessToken||'',igUser:CFG.instagram?.userId||'',
+    simpKey:CFG.simplero?.apiKey||'',simpAlchemy:CFG.simplero?.listIds?.alchemy||'',simpDefy:CFG.simplero?.listIds?.defy||'',
+    hsToken:CFG.hubspot?.privateAppToken||'',
+    trKey:CFG.trello?.apiKey||'',trToken:CFG.trello?.token||'',trBoard:CFG.trello?.boardId||'',
+    podPlatform:CFG.podcast?.platform||'buzzsprout',podKey:CFG.podcast?.apiKey||'',podId:CFG.podcast?.podcastId||'',podManual:'',
+    goals:{email:CFG.goals?.email||1000,ig:CFG.goals?.ig||50000,podcast:CFG.goals?.podcast||5000,youtube:CFG.goals?.youtube||10000}
+  };
+}
+function saveKeys(){localStorage.setItem(KEY_STORE,JSON.stringify(K));}
+
+/* ================= TABS ================= */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>go(t.dataset.tab);
+});
+function go(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===name));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ================= PROGRAMS ================= */
+const PROGRAMS=[
+  {id:'pitch',name:'Pitch Please',accent:'teal',date:'2026-08-17',countdownTo:'2026-08-17',
+   goal:100,current:0,price:'$497',
+   dates:[['Kickoff','2026-08-17'],['AI Build #2','2026-08-19'],['AI Build #3','2026-10-01']],
+   details:'12-month pitch mastery container. AI build sessions layered through the fall.',
+   fields:['enrollment','notes']},
+  {id:'power',name:'Power Retreat',accent:'peach',date:'2026-09-16',countdownTo:'2026-09-16',
+   goal:8,current:2,price:'',
+   details:'Intimate in-person retreat. Eight women.',
+   fields:['registrations','status']},
+  {id:'tracy',name:'Tracy Lit Dinner',accent:'coral',date:'',dateEditable:true,
+   goal:8,current:7,price:'',
+   details:'Curated dinner. Confirmed attendees below.',
+   fields:['attendees']},
+  {id:'wlac',name:'Work Life Alignment Challenge',accent:'navy',date:'2027-02-01',dateLabel:'February 2027, date TBD',
+   goal:21,current:0,price:'',calc:true,convRate:30,
+   details:'Five-day live challenge. Feeds DEFY.',
+   fields:['enrollmentGoal','rate','date','price']},
+  {id:'yesand',name:'Yes And Live',accent:'teal',date:'2027-02-01',countdownTo:'2027-02-01',dateLabel:'February 2027, date TBD',
+   goal:0,current:0,price:'',
+   details:'Live show. Registration opens closer to the date.',
+   fields:['registrations','goal','date','price']}
+];
+
+function progGet(id,field,def){
+  S.programs=S.programs||{};S.programs[id]=S.programs[id]||{};
+  return (S.programs[id][field]!==undefined)?S.programs[id][field]:def;
+}
+function progSet(id,field,val){
+  S.programs=S.programs||{};S.programs[id]=S.programs[id]||{};
+  S.programs[id][field]=val;saveState();renderQuickView();renderLaunchCal();
+}
+
+function renderPrograms(){
+  const wrap=document.getElementById('accWrap');wrap.innerHTML='';
+  PROGRAMS.forEach(p=>{
+    const cur=Number(progGet(p.id,'current',p.current));
+    const goal=Number(progGet(p.id,'goal',p.goal))||p.goal;
+    const pct=goal>0?Math.min(100,Math.round(cur/goal*100)):0;
+    const dTxt=(()=>{
+      const dt=p.countdownTo?daysUntil(p.countdownTo):null;
+      if(dt===null) return p.dateLabel||(p.dateEditable?'Date TBD':'');
+      if(dt<0) return 'past';
+      return dt+' days';
+    })();
+
+    const acc=document.createElement('div');acc.className='acc';
+    let body='';
+
+    // Common: countdown row + progress + spots
+    if(p.id==='pitch'){
+      const dateRows=p.dates.map(d=>`<div class="qv-row"><span class="qv-name">${d[0]}</span><span class="qv-nums">${d[1]}</span></div>`).join('');
+      body=`
+        ${dateRows}
+        <div class="field-grid">
+          <div><label>Current enrollment</label><input type="number" value="${cur}" onchange="progSet('${p.id}','current',this.value)"></div>
+          <div><label>Enrollment goal</label><input type="number" value="${goal}" onchange="progSet('${p.id}','goal',this.value)"></div>
+        </div>
+        <div class="bar" style="margin:8px 0 6px"><span style="width:${pct}%"></span></div>
+        <p class="muted">${cur} of ${goal} enrolled. <b>${Math.max(0,goal-cur)}</b> spots remaining.</p>
+        <div class="field-grid">
+          <div><label>Price</label><input type="text" value="${progGet(p.id,'price',p.price)}" onchange="progSet('${p.id}','price',this.value)"></div>
+        </div>
+        <label>Program details</label><textarea onchange="progSet('${p.id}','details',this.value)">${progGet(p.id,'details',p.details)}</textarea>
+        <label>Launch notes</label><textarea onchange="progSet('${p.id}','notes',this.value)">${progGet(p.id,'notes','')}</textarea>`;
+    } else if(p.id==='power'){
+      body=`
+        <div class="field-grid">
+          <div><label>Registrations</label><input type="number" value="${cur}" onchange="progSet('${p.id}','current',this.value)"></div>
+          <div><label>Goal</label><input type="number" value="${goal}" onchange="progSet('${p.id}','goal',this.value)"></div>
+        </div>
+        <div class="bar peach" style="margin:8px 0 6px"><span style="width:${pct}%"></span></div>
+        <p class="muted">${cur} of ${goal} women. <b>${Math.max(0,goal-cur)}</b> spots remaining.</p>
+        <div class="field-grid">
+          <div><label>Price</label><input type="text" value="${progGet(p.id,'price',p.price)}" placeholder="Set price" onchange="progSet('${p.id}','price',this.value)"></div>
+        </div>
+        <label>Details</label><textarea onchange="progSet('${p.id}','details',this.value)">${progGet(p.id,'details',p.details)}</textarea>
+        <label>Status notes</label><textarea onchange="progSet('${p.id}','status',this.value)">${progGet(p.id,'status','')}</textarea>`;
+    } else if(p.id==='tracy'){
+      const hot=pct>=85?`<span class="hot-label">🔥 almost there</span>`:'';
+      body=`
+        <div class="field-grid">
+          <div><label>Confirmed attendees</label><input type="number" value="${cur}" onchange="progSet('${p.id}','current',this.value)"></div>
+          <div><label>Goal</label><input type="number" value="${goal}" onchange="progSet('${p.id}','goal',this.value)"></div>
+        </div>
+        <div class="bar coral" style="margin:8px 0 6px"><span style="width:${pct}%"></span></div>
+        <p class="muted">${cur} of ${goal} confirmed. ${pct}% full. ${hot}</p>
+        <div class="field-grid">
+          <div><label>Date</label><input type="text" value="${progGet(p.id,'date','')}" placeholder="TBD" onchange="progSet('${p.id}','date',this.value)"></div>
+        </div>
+        <label>Details</label><textarea onchange="progSet('${p.id}','details',this.value)">${progGet(p.id,'details',p.details)}</textarea>`;
+    } else if(p.id==='wlac'){
+      const rate=Number(progGet(p.id,'rate',p.convRate))||p.convRate;
+      const needed=rate>0?Math.ceil(21/(rate/100)):0;
+      body=`
+        <p class="muted" style="margin-bottom:6px">Goal: <b>21 participants convert to DEFY.</b></p>
+        <div class="field-grid">
+          <div><label>Assumed conversion rate %</label><input type="number" value="${rate}" onchange="progSet('${p.id}','rate',this.value)"></div>
+          <div><label>Challenge enrollment goal</label><input type="number" value="${progGet(p.id,'enrollmentGoal',needed)}" onchange="progSet('${p.id}','enrollmentGoal',this.value)"></div>
+        </div>
+        <div class="callout" style="margin:6px 0">At a ${rate}% conversion rate, you need <b>${needed}</b> challenge enrollees to land 21 DEFY converts.</div>
+        <div class="field-grid">
+          <div><label>Event date once decided</label><input type="text" value="${progGet(p.id,'date','')}" placeholder="February 2027, TBD" onchange="progSet('${p.id}','date',this.value)"></div>
+          <div><label>Price</label><input type="text" value="${progGet(p.id,'price','')}" onchange="progSet('${p.id}','price',this.value)"></div>
+        </div>
+        <label>Details</label><textarea onchange="progSet('${p.id}','details',this.value)">${progGet(p.id,'details',p.details)}</textarea>`;
+    } else if(p.id==='yesand'){
+      body=`
+        <div class="field-grid">
+          <div><label>Current registrations</label><input type="number" value="${cur}" onchange="progSet('${p.id}','current',this.value)"></div>
+          <div><label>Attendance goal</label><input type="number" value="${goal}" placeholder="Set goal" onchange="progSet('${p.id}','goal',this.value)"></div>
+        </div>
+        <div class="field-grid">
+          <div><label>Event date</label><input type="text" value="${progGet(p.id,'date','')}" placeholder="February 2027, TBD" onchange="progSet('${p.id}','date',this.value)"></div>
+          <div><label>Price</label><input type="text" value="${progGet(p.id,'price','')}" onchange="progSet('${p.id}','price',this.value)"></div>
+        </div>
+        <label>Event details</label><textarea onchange="progSet('${p.id}','details',this.value)">${progGet(p.id,'details',p.details)}</textarea>`;
+    }
+
+    acc.innerHTML=`
+      <div class="acc-head ${p.accent}" onclick="this.parentElement.classList.toggle('open')">
+        <h3>${p.name}</h3>
+        <div class="meta">
+          <div class="countdown">${dTxt}</div>
+          <div>${p.dateLabel||p.date||'Date TBD'}</div>
+        </div>
+        <span class="chev">›</span>
+      </div>
+      <div class="acc-body">${body}</div>`;
+    wrap.appendChild(acc);
+  });
+}
+
+function renderQuickView(){
+  const el=document.getElementById('qvList');el.innerHTML='';
+  PROGRAMS.forEach(p=>{
+    const cur=Number(progGet(p.id,'current',p.current));
+    const goal=Number(progGet(p.id,'goal',p.goal))||p.goal;
+    const pct=goal>0?Math.min(100,Math.round(cur/goal*100)):0;
+    const barClass=p.accent==='teal'?'':p.accent;
+    el.innerHTML+=`
+      <div class="qv-row">
+        <span class="qv-name">${p.name}</span>
+        <span class="qv-bar"><span class="bar ${barClass}"><span style="width:${pct}%"></span></span></span>
+        <span class="qv-nums">${cur} / ${goal||'—'}</span>
+      </div>`;
+  });
+}
+
+/* ================= LAUNCH CALENDAR ================= */
+const LAUNCH=[
+  {date:'2026-08-17',event:'Pitch Please Kickoff',status:'Upcoming',statusClass:'teal',goal:'100 enrolled',pid:'pitch'},
+  {date:'2026-08-19',event:'AI Build #2',status:'Upcoming',statusClass:'teal',goal:'Session live',pid:'pitch'},
+  {date:'2026-09-16',event:'Power Retreat',status:'Upcoming',statusClass:'peach',goal:'8 women',pid:'power'},
+  {date:'2026-10-01',event:'AI Build #3',status:'Upcoming',statusClass:'teal',goal:'Session live',pid:'pitch'},
+  {date:'Feb 2027',event:'Work Life Alignment Challenge',status:'Planning',statusClass:'navy',goal:'21 to DEFY',pid:'wlac'},
+  {date:'Feb 2027',event:'Yes And Live',status:'Planning',statusClass:'navy',goal:'Show live',pid:'yesand'}
+];
+function renderLaunchCal(){
+  const tb=document.getElementById('launchCal');tb.innerHTML='';
+  LAUNCH.forEach((r,i)=>{
+    tb.innerHTML+=`<tr>
+      <td>${r.date}</td>
+      <td>${r.event}</td>
+      <td><span class="pill pill-${r.statusClass}">${r.status}</span></td>
+      <td>${r.goal}</td>
+      <td><input class="edit-cell" value="${progGet('launch_'+i,'action','')}" placeholder="Next action..." onchange="progSet('launch_${i}','action',this.value)"></td>
+    </tr>`;
+  });
+}
+
+/* ================= HERO + METRICS ================= */
+function setMetric(prefix,val,goal){
+  const g=Number(goal)||0;
+  document.getElementById('m'+prefix).textContent=fmt(val);
+  document.getElementById('g'+prefix).textContent=fmt(g);
+  const pct=(g>0&&val!=='—'&&val!=null)?Math.min(100,Math.round(val/g*100)):0;
+  const bar=document.getElementById('b'+prefix);if(bar)bar.style.width=pct+'%';
+}
+function stamp(prefix){
+  const t=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  const el=document.getElementById('s'+prefix);if(el)el.textContent='Last synced '+t;
+}
+function renderMetrics(){
+  const g=K.goals;
+  setMetric('Email',S.metrics?.email??'—',g.email);
+  setMetric('Ig',S.metrics?.ig??'—',g.ig);
+  setMetric('Pod',S.metrics?.podcast??'—',g.podcast);
+  setMetric('Yt',S.metrics?.youtube??'—',g.youtube);
+  // hero
+  document.getElementById('hEmail').textContent=fmt(S.metrics?.email??'—');
+  document.getElementById('hIg').textContent=fmt(S.metrics?.ig??'—');
+  document.getElementById('hPod').textContent=fmt(S.metrics?.podcast??'—');
+  document.getElementById('hYt').textContent=fmt(S.metrics?.youtube??'—');
+  document.getElementById('hDefy').textContent=fmt(progGet('defy','current','—'));
+  document.getElementById('hLeads').textContent=fmt(S.metrics?.openLeads??'—');
+}
+function setMetricVal(k,v){S.metrics=S.metrics||{};S.metrics[k]=v;saveState();}
+
+/* ================= API SYNCS ================= */
+async function syncYoutube(){
+  if(!K.ytKey||!K.ytChan){toast('Add YouTube API key and Channel ID first');return;}
+  try{
+    const r=await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${K.ytChan}&key=${K.ytKey}`);
+    const j=await r.json();
+    const subs=Number(j.items?.[0]?.statistics?.subscriberCount);
+    if(!subs&&subs!==0) throw new Error('No data');
+    setMetricVal('youtube',subs);renderMetrics();stamp('Yt');
+    setStatus('Yt',true,'Connected');toast('YouTube synced');
+  }catch(e){setStatus('Yt',false,'Error');toast('YouTube sync failed. Check the key and Channel ID.');}
+}
+async function syncInstagram(){
+  if(!K.igToken||!K.igUser){toast('Add Instagram token and User ID first');return;}
+  try{
+    const r=await fetch(`https://graph.instagram.com/${K.igUser}?fields=followers_count&access_token=${K.igToken}`);
+    const j=await r.json();
+    if(j.error) throw new Error(j.error.message);
+    setMetricVal('ig',Number(j.followers_count));renderMetrics();stamp('Ig');
+    setStatus('Ig',true,'Connected');toast('Instagram synced');
+  }catch(e){setStatus('Ig',false,'Token may be expired. Refresh in Meta Business Suite.');toast('Instagram sync failed. Token may be expired, refresh in Meta Business Suite.');}
+}
+async function syncHubspot(){
+  if(!K.hsToken){toast('Add HubSpot token first');document.getElementById('hsPipeline').innerHTML='<p class="muted">Not connected. Add your token in Settings.</p>';return;}
+  try{
+    const r=await fetch('https://api.hubapi.com/crm/v3/objects/deals?limit=100&properties=dealstage',{headers:{Authorization:'Bearer '+K.hsToken}});
+    const j=await r.json();
+    if(j.status==='error') throw new Error(j.message);
+    const stages={};let total=0;
+    (j.results||[]).forEach(d=>{const s=d.properties?.dealstage||'unknown';stages[s]=(stages[s]||0)+1;total++;});
+    let html='<table><thead><tr><th>Stage</th><th>Deals</th></tr></thead><tbody>';
+    Object.entries(stages).forEach(([s,c])=>{html+=`<tr><td>${s}</td><td>${c}</td></tr>`;});
+    html+=`</tbody></table><p class="muted" style="margin-top:8px">${total} open deals.</p>`;
+    document.getElementById('hsPipeline').innerHTML=html;
+    setMetricVal('openLeads',total);renderMetrics();
+    setStatus('Hs',true,'Connected');toast('HubSpot synced');
+  }catch(e){setStatus('Hs',false,'Error');document.getElementById('hsPipeline').innerHTML='<p class="muted">Sync failed. HubSpot blocks some browser calls. Check the token or use a proxy.</p>';toast('HubSpot sync failed');}
+}
+async function syncTrello(){
+  if(!K.trKey||!K.trToken||!K.trBoard){toast('Add Trello keys first');return;}
+  try{
+    const r=await fetch(`https://api.trello.com/1/boards/${K.trBoard}/cards?key=${K.trKey}&token=${K.trToken}&filter=open`);
+    const cards=await r.json();
+    if(cards.error||!Array.isArray(cards)) throw new Error('bad');
+    let html='';
+    cards.forEach(c=>{
+      const labels=(c.labels||[]).map(l=>(l.color||'').toLowerCase());
+      let pr='pr-low';
+      if(labels.some(l=>['red','orange'].includes(l))) pr='pr-high';
+      else if(labels.some(l=>['yellow'].includes(l))) pr='pr-med';
+      html+=`<div class="task"><span class="pr ${pr}"></span><span class="tx">${c.name}</span></div>`;
+    });
+    document.getElementById('trelloList').innerHTML=html||'<p class="muted">No open cards.</p>';
+    setStatus('Tr',true,'Connected');toast(cards.length+' Trello cards');
+  }catch(e){setStatus('Tr',false,'Error');toast('Trello sync failed. Check keys and Board ID.');}
+}
+async function syncSimplero(){
+  if(!K.simpKey||!K.simpAlchemy){toast('Add Simplero key and Alchemy list ID first');return;}
+  try{
+    const r=await fetch(`https://simplero.com/api/v1/lists/${K.simpAlchemy}/subscriptions?api_key=${K.simpKey}&status=active`);
+    if(!r.ok) throw new Error('http');
+    const j=await r.json();
+    const count=Array.isArray(j)?j.length:(j.count||0);
+    setMetricVal('email',count);renderMetrics();stamp('Email');
+    setStatus('Simp',true,'Connected');toast('Simplero synced');
+  }catch(e){
+    setStatus('Simp',false,'CORS blocked');
+    document.getElementById('sEmail').textContent='CORS blocked. Gino needs the Netlify proxy. See README.';
+    toast('Simplero blocked by CORS. Gino needs to set up the Netlify proxy. See README.');
+  }
+}
+async function syncPodcast(){
+  // manual fallback always works
+  if(K.podPlatform==='manual'||(!K.podKey&&K.podManual)){
+    if(K.podManual){setMetricVal('podcast',Number(K.podManual));renderMetrics();stamp('Pod');setStatus('Pod',true,'Manual');toast('Podcast count set from manual entry');return;}
+  }
+  if(!K.podKey||!K.podId){
+    if(K.podManual){setMetricVal('podcast',Number(K.podManual));renderMetrics();stamp('Pod');setStatus('Pod',true,'Manual');toast('Podcast count set from manual entry');return;}
+    toast('Add a podcast API key and ID, or a manual count');return;
+  }
+  // Buzzsprout episodes endpoint as a connectivity check
+  try{
+    if(K.podPlatform==='buzzsprout'){
+      const r=await fetch(`https://www.buzzsprout.com/api/${K.podId}/episodes.json?api_token=${K.podKey}`);
+      if(!r.ok) throw new Error('http');
+      // Buzzsprout does not return subscriber count; fall back to manual if present
+      if(K.podManual){setMetricVal('podcast',Number(K.podManual));}
+      renderMetrics();stamp('Pod');setStatus('Pod',true,'Connected');toast('Podcast API reachable. Subscriber count uses manual entry.');
+    }else{
+      if(K.podManual){setMetricVal('podcast',Number(K.podManual));renderMetrics();stamp('Pod');setStatus('Pod',true,'Manual');toast('Using manual count');}
+      else toast('Libsyn subscriber counts vary. Use a manual count.');
+    }
+  }catch(e){
+    if(K.podManual){setMetricVal('podcast',Number(K.podManual));renderMetrics();stamp('Pod');setStatus('Pod',true,'Manual');toast('API failed, used manual count');}
+    else{setStatus('Pod',false,'Error');toast('Podcast sync failed');}
+  }
+}
+
+function syncAll(){
+  toast('Syncing all sources...');
+  Promise.allSettled([
+    syncYoutube(),syncInstagram(),syncHubspot(),syncTrello(),syncSimplero(),syncPodcast()
+  ]).then(()=>{
+    const t=new Date().toLocaleString('en-US',{hour:'numeric',minute:'2-digit',month:'short',day:'numeric'});
+    document.getElementById('lastSyncGlobal').textContent='Synced '+t;
+    renderMetrics();
+  });
+}
+
+function setStatus(prefix,ok,txt){
+  const dot=document.getElementById('st'+prefix);
+  const label=document.getElementById('st'+prefix+'Txt');
+  if(!dot) return;
+  dot.className='dot '+(ok?'dot-on':'dot-err');
+  if(label) label.textContent=txt||(ok?'Connected':'Error');
+}
+
+/* ================= LEADS ================= */
+function showInboxScan(){
+  document.getElementById('inboxScan').innerHTML=`
+    <div class="callout">The Gmail scan runs inside a Claude conversation, not in this static page. Copy this into Claude:
+    <div class="code" style="margin-top:8px;white-space:pre-wrap">Scan my inbox from the last 7 days. Find warm leads: anyone who asked about DEFY, Pitch Please, coaching, pricing, or booking a call. For each, give me name, what they asked, and the best next step. Skip newsletters and automated mail.</div>
+    </div>`;
+}
+const LEAD_COLS=[['new','New Lead'],['fit','FIT Call Booked'],['proposal','Proposal Sent'],['won','Enrolled / Won']];
+function renderKanban(){
+  S.leads=S.leads||{new:[],fit:[],proposal:[],won:[]};
+  const el=document.getElementById('leadKanban');el.innerHTML='';
+  LEAD_COLS.forEach(([key,label])=>{
+    const items=(S.leads[key]||[]).map((l,i)=>`
+      <div class="kcard"><span class="kdel" onclick="delLead('${key}',${i})">✕</span>
+      <div class="kname">${l.name}</div>${l.note?`<div class="knote">${l.note}</div>`:''}</div>`).join('');
+    el.innerHTML+=`<div class="kcol"><h4>${label} <span>${(S.leads[key]||[]).length}</span></h4>${items}
+      <button class="kadd" onclick="addLead('${key}')">+ Add</button></div>`;
+  });
+}
+function addLead(col){
+  const name=prompt('Lead name:');if(!name)return;
+  const note=prompt('Note (optional):')||'';
+  S.leads[col].push({name,note});saveState();renderKanban();
+}
+function delLead(col,i){S.leads[col].splice(i,1);saveState();renderKanban();}
+
+/* ================= TASKS ================= */
+function renderTasks(){
+  S.tasks=S.tasks||[];
+  const el=document.getElementById('taskList');el.innerHTML='';
+  S.tasks.forEach((t,i)=>{
+    el.innerHTML+=`<div class="task"><span class="pr pr-${t.pr}"></span><span class="tx">${t.text}</span><span class="tdel" onclick="delTask(${i})">✕</span></div>`;
+  });
+}
+function addTask(){
+  const text=document.getElementById('taskText').value.trim();if(!text)return;
+  const pr=document.getElementById('taskPr').value;
+  S.tasks=S.tasks||[];S.tasks.push({text,pr});saveState();
+  document.getElementById('taskText').value='';renderTasks();
+}
+function delTask(i){S.tasks.splice(i,1);saveState();renderTasks();}
+function showFathom(){
+  document.getElementById('fathomHelp').innerHTML=`<div class="callout">Fathom pulls run inside a Claude conversation. Copy this into Claude:
+  <div class="code" style="margin-top:8px;white-space:pre-wrap">Pull my most recent Monday meeting with Gino from Fathom. Give me the summary and a clean list of action items with owners.</div>
+  Then paste the action items below and click Extract Tasks.</div>`;
+}
+function extractTasks(){
+  const raw=document.getElementById('meetingNotes').value;
+  if(!raw.trim()){toast('Paste meeting notes first');return;}
+  const lines=raw.split('\n');
+  const actionWords=/\b(build|send|fix|follow up|followup|create|update|call|email|draft|schedule|review|post|check|set up|setup|write|ship|launch|add|remove|confirm|book|prep|record|edit)\b/i;
+  let added=0;
+  lines.forEach(l=>{
+    const clean=l.replace(/^[\s\-\*\d\.\)]+/,'').trim();
+    if(clean.length>4&&actionWords.test(clean)){
+      S.tasks=S.tasks||[];S.tasks.push({text:clean,pr:'med'});added++;
+    }
+  });
+  saveState();renderTasks();
+  toast(added?added+' tasks extracted':'No action items found');
+}
+const WEEKLY=[
+  'Sunday email approved','Content approved in Notion','Gino\'s metrics report reviewed',
+  'Podcast clips approved','LinkedIn posts approved','Amplifier activation (monthly)'
+];
+function renderWeekly(){
+  S.weekly=S.weekly||{};
+  const el=document.getElementById('weeklyChecklist');el.innerHTML='';
+  WEEKLY.forEach((item,i)=>{
+    const ck=S.weekly[i]?'checked':'';
+    el.innerHTML+=`<label class="check"><input type="checkbox" ${ck} onchange="S.weekly[${i}]=this.checked;saveState()"> ${item}</label>`;
+  });
+}
+
+/* ================= CONTENT ================= */
+const CONTENT_CAL=[
+  ['Monday','Instagram','Identity','Coordinator'],
+  ['Tuesday','LinkedIn','Money','Bunny'],
+  ['Wednesday','Instagram','Burnout','Coordinator'],
+  ['Thursday','IG + LinkedIn','Podcast Clip','Cinthya'],
+  ['Friday','Instagram','Business Systems','Coordinator'],
+  ['Saturday','Instagram','Motherhood','Coordinator'],
+  ['Sunday','Email','Alchemy','Bunny']
+];
+const STATUS_OPTS=['Idea','Drafted','Approved','Scheduled','Posted'];
+function renderContentCal(){
+  S.content=S.content||{};
+  const tb=document.getElementById('contentCal');tb.innerHTML='';
+  CONTENT_CAL.forEach((r,i)=>{
+    const st=S.content['st'+i]||'Idea';
+    const opts=STATUS_OPTS.map(o=>`<option ${o===st?'selected':''}>${o}</option>`).join('');
+    tb.innerHTML+=`<tr>
+      <td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td>
+      <td><select class="edit-cell" onchange="S.content['st${i}']=this.value;saveState()">${opts}</select></td>
+      <td><input class="edit-cell" value="${S.content['nt'+i]||''}" placeholder="Notes..." onchange="S.content['nt${i}']=this.value;saveState()"></td>
+    </tr>`;
+  });
+}
+const PILLARS=[
+  ['Identity','Permission'],['Money','F.U. Money'],['Burnout','Freedom'],
+  ['Motherhood','Freedom + Permission'],['Business Systems','F.U. Money + Freedom'],['Alignment','Life-first']
+];
+function renderPillars(){
+  const el=document.getElementById('pillars');el.innerHTML='';
+  PILLARS.forEach(p=>{el.innerHTML+=`<div class="qv-row"><span class="qv-name">${p[0]}</span><span class="qv-nums" style="flex:1;text-align:left;color:var(--navy)">${p[1]}</span></div>`;});
+}
+const MANYCHAT=[
+  {kw:'CARDS',route:'witchy-ceo.com tarot reading',cta:'Comment CARDS for your free tarot pull. Your reading is waiting at witchy-ceo.com.'},
+  {kw:'PODCAST',route:'Apple Podcasts',cta:'Comment PODCAST and I will send you the latest Yes, And! episode on Apple Podcasts.'},
+  {kw:'ALCHEMY',route:'the newsletter',cta:'Comment ALCHEMY to get on the newsletter. This is where the real teaching lives.'}
+];
+function renderManyChat(){
+  const el=document.getElementById('mcKeywords');el.innerHTML='';
+  MANYCHAT.forEach((m,i)=>{
+    el.innerHTML+=`<div class="mc-card"><h4>${m.kw}</h4><p>${m.route}</p>
+      <p style="font-style:italic;color:var(--mint);font-size:.8rem">"${m.cta}"</p>
+      <button class="btn btn-sm" onclick="copyCta(${i})">Copy CTA</button></div>`;
+  });
+}
+function copyCta(i){navigator.clipboard.writeText(MANYCHAT[i].cta).then(()=>toast('CTA copied'));}
+
+/* ================= TEAM ================= */
+const GINO_CHECK=[
+  'New email subscribers','ManyChat keyword conversions','FIT calls booked',
+  'Podcast downloads, 7-day','IG follower count and weekly gain','Automations needing attention'
+];
+const CINTHYA_CHECK=[
+  '3 clips cut','Episode uploaded to Apple Podcasts','Clips in Notion for coordinator',
+  'Intro script uses going deeper framing','72-hour promo window alerted'
+];
+function renderChecklist(elId,items,storeKey){
+  S[storeKey]=S[storeKey]||{};
+  const el=document.getElementById(elId);el.innerHTML='';
+  items.forEach((item,i)=>{
+    const ck=S[storeKey][i]?'checked':'';
+    el.innerHTML+=`<label class="check"><input type="checkbox" ${ck} onchange="S['${storeKey}'][${i}]=this.checked;saveState()"> ${item}</label>`;
+  });
+}
+function renderAmplifiers(){
+  S.amplifiers=S.amplifiers||Array.from({length:10},()=>({name:'',last:'',shared:'',conv:'',done:false}));
+  const tb=document.getElementById('amplifiers');tb.innerHTML='';
+  S.amplifiers.forEach((a,i)=>{
+    tb.innerHTML+=`<tr>
+      <td><input class="edit-cell" value="${a.name}" placeholder="Amplifier ${i+1}" onchange="ampSet(${i},'name',this.value)"></td>
+      <td><input class="edit-cell" value="${a.last}" placeholder="Date" onchange="ampSet(${i},'last',this.value)"></td>
+      <td><input class="edit-cell" value="${a.shared}" placeholder="What" onchange="ampSet(${i},'shared',this.value)"></td>
+      <td><input class="edit-cell" value="${a.conv}" placeholder="0" onchange="ampSet(${i},'conv',this.value)"></td>
+      <td style="text-align:center"><span class="dot ${a.done?'dot-on':'dot-err'}" onclick="ampToggle(${i})" title="${a.done?'Done this month':'Reminder due'}" style="cursor:pointer;width:12px;height:12px"></span></td>
+    </tr>`;
+  });
+}
+function ampSet(i,f,v){S.amplifiers[i][f]=v;saveState();}
+function ampToggle(i){S.amplifiers[i].done=!S.amplifiers[i].done;saveState();renderAmplifiers();}
+
+/* ================= SETTINGS ================= */
+function loadSettings(){
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??'';};
+  set('ytKey',K.ytKey);set('ytChan',K.ytChan);set('ytGoal',K.goals.youtube);
+  set('igToken',K.igToken);set('igUser',K.igUser);set('igGoal',K.goals.ig);
+  set('simpKey',K.simpKey);set('simpAlchemy',K.simpAlchemy);set('simpDefy',K.simpDefy);set('simpGoal',K.goals.email);
+  set('hsToken',K.hsToken);
+  set('trKey',K.trKey);set('trToken',K.trToken);set('trBoard',K.trBoard);
+  set('podPlatform',K.podPlatform);set('podKey',K.podKey);set('podId',K.podId);set('podManual',K.podManual);set('podGoal',K.goals.podcast);
+  set('goalEmail',K.goals.email);set('goalIg',K.goals.ig);set('goalPod',K.goals.podcast);set('goalYt',K.goals.youtube);
+}
+const val=id=>document.getElementById(id).value.trim();
+function saveYt(){K.ytKey=val('ytKey');K.ytChan=val('ytChan');K.goals.youtube=Number(val('ytGoal'))||K.goals.youtube;saveKeys();renderMetrics();toast('YouTube settings saved');}
+function saveIg(){K.igToken=val('igToken');K.igUser=val('igUser');K.goals.ig=Number(val('igGoal'))||K.goals.ig;saveKeys();renderMetrics();toast('Instagram settings saved');}
+function saveSimp(){K.simpKey=val('simpKey');K.simpAlchemy=val('simpAlchemy');K.simpDefy=val('simpDefy');K.goals.email=Number(val('simpGoal'))||K.goals.email;saveKeys();renderMetrics();toast('Simplero settings saved');}
+function saveHs(){K.hsToken=val('hsToken');saveKeys();toast('HubSpot settings saved');}
+function saveTr(){K.trKey=val('trKey');K.trToken=val('trToken');K.trBoard=val('trBoard');saveKeys();toast('Trello settings saved');}
+function saveePod(){K.podPlatform=val('podPlatform');K.podKey=val('podKey');K.podId=val('podId');K.podManual=val('podManual');K.goals.podcast=Number(val('podGoal'))||K.goals.podcast;saveKeys();renderMetrics();toast('Podcast settings saved');}
+function saveGoals(){
+  K.goals.email=Number(val('goalEmail'))||K.goals.email;
+  K.goals.ig=Number(val('goalIg'))||K.goals.ig;
+  K.goals.podcast=Number(val('goalPod'))||K.goals.podcast;
+  K.goals.youtube=Number(val('goalYt'))||K.goals.youtube;
+  saveKeys();renderMetrics();toast('Goals saved');
+}
+
+/* ================= INIT ================= */
+function init(){
+  // restore loose inputs
+  if(S.fitCalls!==undefined)document.getElementById('fitCalls').value=S.fitCalls;
+  if(S.ginoNotes!==undefined)document.getElementById('ginoNotes').value=S.ginoNotes;
+
+  renderPrograms();renderQuickView();renderLaunchCal();
+  renderMetrics();
+  renderKanban();renderTasks();renderWeekly();
+  renderContentCal();renderPillars();renderManyChat();
+  renderChecklist('ginoCheck',GINO_CHECK,'ginoCheck');
+  renderChecklist('cinthyaCheck',CINTHYA_CHECK,'cinthyaCheck');
+  renderAmplifiers();
+  loadSettings();
+}
+init();
+</script>
+</body>
+</html>
