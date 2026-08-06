@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#273945"/>
+  <!-- unicorn horn rising from the starfish -->
+  <polygon points="27.5,17 36.5,17 32,2.5" fill="#F9AD84"/>
+  <path d="M29.2 13 L34.8 13 M28.4 15 L35.6 15" stroke="#D85A30" stroke-width="1.4" stroke-linecap="round"/>
+  <!-- starfish body -->
+  <path d="M32,15 L37.29,29.72 L52.92,30.20 L40.56,39.78 L44.93,54.80 L32,46 L19.07,54.80 L23.44,39.78 L11.08,30.20 L26.71,29.72 Z"
+        fill="#88CCC6" stroke="#D9E9E4" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- little face -->
+  <circle cx="27.5" cy="34" r="1.9" fill="#273945"/>
+  <circle cx="36.5" cy="34" r="1.9" fill="#273945"/>
+  <path d="M29.5 39 Q32 41.5 34.5 39" stroke="#273945" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+  <!-- sparkle -->
+  <path d="M51 11 L52.4 14.2 L55.6 15.6 L52.4 17 L51 20.2 L49.6 17 L46.4 15.6 L49.6 14.2 Z" fill="#D9E9E4"/>
+</svg>

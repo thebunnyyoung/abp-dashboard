@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>A Better Place Consulting Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="alternate icon" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
@@ -669,7 +671,7 @@ function go(name){
 /* ================= PROGRAMS ================= */
 const PROGRAMS=[
   {id:'pitch',name:'Pitch Please',accent:'teal',date:'2026-08-17',countdownTo:'2026-08-17',
-   goal:100,current:0,price:'$497',
+   goal:100,current:0,price:'$497',simpleroListId:'334951',
    dates:[['Kickoff','2026-08-17'],['AI Build #2','2026-08-19'],['AI Build #3','2026-10-01']],
    details:'12-month pitch mastery container. AI build sessions layered through the fall.',
    fields:['enrollment','notes']},
@@ -989,10 +991,31 @@ async function syncPodcast(){
   }
 }
 
+async function syncPrograms(){
+  // Programs with a simpleroListId auto-pull their enrollment count from Simplero via the proxy.
+  if(!K.proxyBase) return;
+  let touched=false;
+  for(const p of PROGRAMS){
+    if(!p.simpleroListId) continue;
+    try{
+      const r=await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/simplero?listId=${p.simpleroListId}`);
+      const j=await r.json();
+      if(j.count!=null){
+        S.programs=S.programs||{};S.programs[p.id]=S.programs[p.id]||{};
+        S.programs[p.id].current=j.count;touched=true;
+      }
+    }catch(e){}
+  }
+  if(touched){
+    localStorage.setItem(STORE_KEY,JSON.stringify(S));
+    renderPrograms();renderQuickView();renderLaunchCal();
+  }
+}
+
 function syncAll(){
   toast('Syncing all sources...');
   Promise.allSettled([
-    syncYoutube(),syncInstagram(),syncHubspot(),syncTrello(),syncSimplero(),syncPodcast()
+    syncYoutube(),syncInstagram(),syncHubspot(),syncTrello(),syncSimplero(),syncPodcast(),syncPrograms()
   ]).then(()=>{
     const t=new Date().toLocaleString('en-US',{hour:'numeric',minute:'2-digit',month:'short',day:'numeric'});
     document.getElementById('lastSyncGlobal').textContent='Synced '+t;
@@ -1205,6 +1228,7 @@ function init(){
   renderChecklist('cinthyaCheck',CINTHYA_CHECK,'cinthyaCheck');
   renderAmplifiers();
   loadSettings();
+  if(K.proxyBase) syncPrograms(); // pull live enrollment counts on load
 }
 init();
 </script>
