@@ -677,16 +677,16 @@ const PROGRAMS=[
    goal:8,current:2,price:'',
    details:'Intimate in-person retreat. Eight women.',
    fields:['registrations','status']},
-  {id:'tracy',name:'Tracy Lit Dinner',accent:'coral',date:'',dateEditable:true,
+  {id:'tracy',name:'Traci Litt Dinner',accent:'coral',date:'',dateEditable:true,
    goal:8,current:7,price:'',
    details:'Curated dinner. Confirmed attendees below.',
    fields:['attendees']},
   {id:'wlac',name:'Work Life Alignment Challenge',accent:'navy',date:'2027-02-01',dateLabel:'February 2027, date TBD',
-   goal:21,current:0,price:'',calc:true,convRate:30,
+   goal:1000,current:0,price:'',calc:true,convRate:30,
    details:'Five-day live challenge. Feeds DEFY.',
    fields:['enrollmentGoal','rate','date','price']},
   {id:'yesand',name:'Yes And Live',accent:'teal',date:'2027-02-01',countdownTo:'2027-02-01',dateLabel:'February 2027, date TBD',
-   goal:0,current:0,price:'',
+   goal:100,current:0,price:'',
    details:'Live show. Registration opens closer to the date.',
    fields:['registrations','goal','date','price']}
 ];
@@ -760,14 +760,22 @@ function renderPrograms(){
         <label>Details</label><textarea onchange="progSet('${p.id}','details',this.value)">${progGet(p.id,'details',p.details)}</textarea>`;
     } else if(p.id==='wlac'){
       const rate=Number(progGet(p.id,'rate',p.convRate))||p.convRate;
-      const needed=rate>0?Math.ceil(21/(rate/100)):0;
+      const goalP=Number(progGet(p.id,'goal',p.goal))||p.goal;
+      const curP=Number(progGet(p.id,'current',p.current));
+      const pctP=goalP>0?Math.min(100,Math.round(curP/goalP*100)):0;
+      const projected=Math.round(goalP*(rate/100));
       body=`
-        <p class="muted" style="margin-bottom:6px">Goal: <b>21 participants convert to DEFY.</b></p>
+        <p class="muted" style="margin-bottom:6px">Target: <b>${goalP.toLocaleString()} challenge participants.</b></p>
         <div class="field-grid">
-          <div><label>Assumed conversion rate %</label><input type="number" value="${rate}" onchange="progSet('${p.id}','rate',this.value)"></div>
-          <div><label>Challenge enrollment goal</label><input type="number" value="${progGet(p.id,'enrollmentGoal',needed)}" onchange="progSet('${p.id}','enrollmentGoal',this.value)"></div>
+          <div><label>Current enrollment</label><input type="number" value="${curP}" onchange="progSet('${p.id}','current',this.value)"></div>
+          <div><label>Participant goal</label><input type="number" value="${goalP}" onchange="progSet('${p.id}','goal',this.value)"></div>
         </div>
-        <div class="callout" style="margin:6px 0">At a ${rate}% conversion rate, you need <b>${needed}</b> challenge enrollees to land 21 DEFY converts.</div>
+        <div class="bar navy" style="margin:8px 0 6px"><span style="width:${pctP}%"></span></div>
+        <p class="muted">${curP.toLocaleString()} of ${goalP.toLocaleString()} enrolled.</p>
+        <div class="field-grid">
+          <div><label>Assumed conversion to DEFY %</label><input type="number" value="${rate}" onchange="progSet('${p.id}','rate',this.value)"></div>
+        </div>
+        <div class="callout" style="margin:6px 0">At a ${rate}% conversion, ${goalP.toLocaleString()} participants would land about <b>${projected.toLocaleString()}</b> DEFY members.</div>
         <div class="field-grid">
           <div><label>Event date once decided</label><input type="text" value="${progGet(p.id,'date','')}" placeholder="February 2027, TBD" onchange="progSet('${p.id}','date',this.value)"></div>
           <div><label>Price</label><input type="text" value="${progGet(p.id,'price','')}" onchange="progSet('${p.id}','price',this.value)"></div>
@@ -822,8 +830,8 @@ const LAUNCH=[
   {date:'2026-08-19',event:'AI Build #2',status:'Upcoming',statusClass:'teal',goal:'Session live',pid:'pitch'},
   {date:'2026-09-16',event:'Power Retreat',status:'Upcoming',statusClass:'peach',goal:'8 women',pid:'power'},
   {date:'2026-10-01',event:'AI Build #3',status:'Upcoming',statusClass:'teal',goal:'Session live',pid:'pitch'},
-  {date:'Feb 2027',event:'Work Life Alignment Challenge',status:'Planning',statusClass:'navy',goal:'21 to DEFY',pid:'wlac'},
-  {date:'Feb 2027',event:'Yes And Live',status:'Planning',statusClass:'navy',goal:'Show live',pid:'yesand'}
+  {date:'Feb 2027',event:'Work Life Alignment Challenge',status:'Planning',statusClass:'navy',goal:'1,000 participants',pid:'wlac'},
+  {date:'Feb 2027',event:'Yes And Live',status:'Planning',statusClass:'navy',goal:'100 attendees',pid:'yesand'}
 ];
 function renderLaunchCal(){
   const tb=document.getElementById('launchCal');tb.innerHTML='';
