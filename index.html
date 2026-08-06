@@ -277,7 +277,7 @@ tr:last-child td{border-bottom:none}
     </div>
     <div class="card">
       <h3>Instagram</h3>
-      <div class="card-sub">Meta Graph API</div>
+      <div class="card-sub">Metricool</div>
       <div class="metric-num" id="mIg">—</div>
       <div class="metric-goal">Goal <span id="gIg">50,000</span></div>
       <div class="bar peach"><span id="bIg"></span></div>
@@ -504,7 +504,7 @@ tr:last-child td{border-bottom:none}
       <button class="btn btn-sm" onclick="saveIg()">Save</button>
       <button class="btn btn-sm btn-outline" onclick="syncInstagram()">Test Connection</button>
     </div>
-    <div class="callout"><b>Where to get it:</b> Meta Business Suite, then Settings, then System Users. Generate a token with the instagram_basic scope. Token expires every 60 days, so set a calendar reminder to refresh it.</div>
+    <div class="callout"><b>Now pulled through Metricool.</b> Instagram follower count comes through the Data Proxy using your existing Metricool token, so it does not expire every 60 days and these two fields can stay blank. Add <b>METRICOOL_TOKEN</b> in Netlify. The Access Token and User ID fields are only a fallback if you ever switch to the direct Meta API.</div>
   </div>
 
   <!-- Simplero -->
@@ -879,14 +879,24 @@ async function syncYoutube(){
   }catch(e){setStatus('Yt',false,'Error');toast('YouTube sync failed. Check the key and Channel ID.');}
 }
 async function syncInstagram(){
-  if(!K.igToken||!K.igUser){toast('Add Instagram token and User ID first');return;}
+  const useProxy=!!K.proxyBase;
+  if(!useProxy&&(!K.igToken||!K.igUser)){toast('Set the Data Proxy URL (Metricool), or add an Instagram token');return;}
   try{
-    const r=await fetch(`https://graph.instagram.com/${K.igUser}?fields=followers_count&access_token=${K.igToken}`);
-    const j=await r.json();
-    if(j.error) throw new Error(j.error.message);
-    setMetricVal('ig',Number(j.followers_count));renderMetrics();stamp('Ig');
+    let followers;
+    if(useProxy){
+      const r=await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/metricool`);
+      const j=await r.json();
+      if(j.error||j.count==null) throw new Error(j.error||'no follower data');
+      followers=Number(j.count);
+    }else{
+      const r=await fetch(`https://graph.instagram.com/${K.igUser}?fields=followers_count&access_token=${K.igToken}`);
+      const j=await r.json();
+      if(j.error) throw new Error(j.error.message);
+      followers=Number(j.followers_count);
+    }
+    setMetricVal('ig',followers);renderMetrics();stamp('Ig');
     setStatus('Ig',true,'Connected');toast('Instagram synced');
-  }catch(e){setStatus('Ig',false,'Token may be expired. Refresh in Meta Business Suite.');toast('Instagram sync failed. Token may be expired, refresh in Meta Business Suite.');}
+  }catch(e){setStatus('Ig',false,'Error');toast('Instagram sync failed. '+(e.message||''));}
 }
 async function syncHubspot(){
   const useProxy=!!K.proxyBase;
