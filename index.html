@@ -311,6 +311,14 @@ tr:last-child td{border-bottom:none}
     </div>
     <div class="stack">
       <div class="card">
+        <h3>DEFY Members</h3>
+        <div class="card-sub">Current members toward goal</div>
+        <input type="number" id="defyCur" class="inline-num" min="0" onchange="progSet('defy','current',this.value);renderMetrics()">
+        <span class="muted" style="margin:0 8px">of</span>
+        <input type="number" id="defyGoal" class="inline-num" min="0" onchange="progSet('defy','goal',this.value);renderMetrics()">
+        <div class="bar" style="margin-top:12px"><span id="defyBar"></span></div>
+      </div>
+      <div class="card">
         <h3>FIT Calls This Week</h3>
         <div class="card-sub">Target 3+ per week</div>
         <input type="number" id="fitCalls" class="inline-num" min="0" onchange="saveState()">
@@ -871,7 +879,9 @@ function renderMetrics(){
   document.getElementById('hIg').textContent=fmt(S.metrics?.ig??'—');
   document.getElementById('hPod').textContent=fmt(S.metrics?.podcast??'—');
   document.getElementById('hYt').textContent=fmt(S.metrics?.youtube??'—');
-  document.getElementById('hDefy').textContent=fmt(progGet('defy','current','—'));
+  const dc=Number(progGet('defy','current',17)),dg=Number(progGet('defy','goal',50))||50;
+  document.getElementById('hDefy').textContent=fmt(dc);
+  const db=document.getElementById('defyBar');if(db)db.style.width=Math.min(100,Math.round(dc/dg*100))+'%';
   document.getElementById('hLeads').textContent=fmt(S.metrics?.openLeads??'—');
 }
 function setMetricVal(k,v){S.metrics=S.metrics||{};S.metrics[k]=v;saveState();}
@@ -1219,6 +1229,8 @@ function init(){
   // restore loose inputs
   if(S.fitCalls!==undefined)document.getElementById('fitCalls').value=S.fitCalls;
   if(S.ginoNotes!==undefined)document.getElementById('ginoNotes').value=S.ginoNotes;
+  document.getElementById('defyCur').value=progGet('defy','current',17);
+  document.getElementById('defyGoal').value=progGet('defy','goal',50);
 
   renderPrograms();renderQuickView();renderLaunchCal();
   renderMetrics();
