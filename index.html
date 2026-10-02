@@ -281,7 +281,7 @@ tr:last-child td{border-bottom:none}
       <h3>Instagram</h3>
       <div class="card-sub">Metricool</div>
       <div class="metric-num" id="mIg">—</div>
-      <div class="metric-goal">Goal <span id="gIg">50,000</span></div>
+      <div class="metric-goal">Goal <span id="gIg">100,000</span></div>
       <div class="bar peach"><span id="bIg"></span></div>
       <div class="synced" id="sIg">Not yet connected</div>
     </div>
@@ -660,10 +660,18 @@ if(!K){
     hsToken:CFG.hubspot?.privateAppToken||'',
     trKey:CFG.trello?.apiKey||'',trToken:CFG.trello?.token||'',trBoard:CFG.trello?.boardId||'',
     podPlatform:CFG.podcast?.platform||'buzzsprout',podKey:CFG.podcast?.apiKey||'',podId:CFG.podcast?.podcastId||'',podManual:'',
-    proxyBase:'',
-    goals:{email:CFG.goals?.email||1000,ig:CFG.goals?.ig||50000,podcast:CFG.goals?.podcast||5000,youtube:CFG.goals?.youtube||10000}
+    proxyBase:'https://gilded-youtiao-746a2f.netlify.app',
+    goals:{email:CFG.goals?.email||1000,ig:CFG.goals?.ig||100000,podcast:CFG.goals?.podcast||5000,youtube:CFG.goals?.youtube||10000}
   };
 }
+// MIGRATION: force the live Netlify proxy + current targets even for browsers with older saved keys
+(function(){try{var ch=false;
+  if(!K.proxyBase||/your-site/.test(K.proxyBase)){K.proxyBase='https://gilded-youtiao-746a2f.netlify.app';ch=true;}
+  K.goals=K.goals||{};
+  if(!K.goals.ig||K.goals.ig===50000){K.goals.ig=100000;ch=true;}
+  if(!K.goals.email){K.goals.email=1000;ch=true;}
+  if(ch)localStorage.setItem(KEY_STORE,JSON.stringify(K));
+}catch(e){}})();
 function saveKeys(){localStorage.setItem(KEY_STORE,JSON.stringify(K));}
 
 /* ================= TABS ================= */
