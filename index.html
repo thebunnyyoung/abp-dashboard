@@ -10,6 +10,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 <script src="config.js"></script>
+<!-- Google sign-in for the Q4 Pipeline tab. Reads the private tracker Sheet with the viewer's own Google account. -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{
   --teal:#88CCC6;
@@ -231,6 +233,94 @@ tr:last-child td{border-bottom:none}
   .hero{grid-template-columns:repeat(2,1fr)}
   .kanban{grid-template-columns:1fr}
 }
+
+/* ---------- Q4 Pipeline ---------- */
+.q4-top-actions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.q4-top-actions .muted{font-size:.78rem}
+.q4-hero{background:var(--navy);border-radius:16px;padding:24px 26px;display:grid;grid-template-columns:minmax(260px,1.1fr) 2fr;gap:26px;align-items:center;margin-bottom:22px}
+.q4-hero .lbl{color:var(--mint);font-size:.8rem;opacity:.9}
+.q4-fig{font-family:'DM Sans',system-ui,sans-serif;font-weight:600;font-size:3.2rem;line-height:1.02;color:var(--white);margin:6px 0 10px;letter-spacing:-.5px}
+.q4-hero .subline{color:var(--mint);font-size:.86rem;line-height:1.55}
+.q4-hero .subline b{color:var(--white);font-weight:600}
+.q4-hero .fine{color:var(--mint);opacity:.65;font-size:.72rem;margin-top:10px}
+.q4-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.q4-tile{background:rgba(255,255,255,.06);border-radius:12px;padding:14px 14px 12px}
+.q4-tile .lbl{display:block}
+.q4-tile .v{font-weight:600;font-size:1.75rem;line-height:1.1;color:var(--teal);margin-top:6px}
+.q4-tile .s{font-size:.74rem;color:var(--mint);opacity:.75;margin-top:3px}
+.q4-busy{opacity:.55;transition:opacity .2s;pointer-events:none}
+.tierpill{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;font-weight:700;font-size:.78rem;flex:0 0 auto}
+.tA{background:var(--navy);color:var(--white)}
+.tB{background:var(--teal);color:var(--navy)}
+.tC{background:var(--mint);color:var(--navy)}
+.tD{background:var(--offwhite);color:var(--muted);border:1px solid var(--line)}
+.q4-due{display:flex;gap:12px;align-items:flex-start;padding:11px 6px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:8px}
+.q4-due:last-child{border-bottom:none}
+.q4-due:hover,.q4-due:focus-visible{background:var(--offwhite);outline:none}
+.q4-due .nm{font-weight:600;font-size:.9rem}
+.q4-due .why{font-size:.8rem;color:var(--muted);margin-top:2px;line-height:1.4}
+.q4-due .when{margin-left:auto;text-align:right;font-size:.78rem;white-space:nowrap;color:var(--muted);padding-left:8px}
+.late{color:var(--coral);font-weight:600}
+.q4-tier{padding:10px 0;border-bottom:1px solid var(--line)}
+.q4-tier .row1{display:flex;align-items:center;gap:10px;font-size:.88rem;margin-bottom:8px}
+.q4-tier .row1 .r{margin-left:auto;color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums}
+.q4-side{font-size:.82rem;color:var(--muted);margin-top:14px;line-height:1.55}
+.q4-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 6px}
+.chip{background:var(--offwhite);border:1px solid var(--line);color:var(--navy);padding:6px 13px;border-radius:999px;font-size:.8rem;font-weight:600}
+.chip.on{background:var(--navy);color:var(--offwhite);border-color:var(--navy)}
+.q4-filters select{width:auto;padding:6px 10px;font-size:.82rem;border-radius:999px}
+.q4-filters input[type=text]{flex:1;min-width:180px;padding:7px 12px;border-radius:999px}
+.q4-count{font-size:.78rem;color:var(--muted);margin:10px 0 4px}
+.q4-row{border-bottom:1px solid var(--line)}
+.q4-row:last-child{border-bottom:none}
+.q4-main{display:grid;grid-template-columns:32px 26px minmax(170px,1.35fr) minmax(150px,1.5fr) 92px 96px 84px 156px 12px;gap:12px;align-items:center;padding:11px 6px;cursor:pointer;border-radius:8px}
+.q4-main:hover,.q4-main:focus-visible{background:var(--offwhite);outline:none}
+.q4-rank{font-size:.78rem;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.q4-name{font-weight:600;font-size:.92rem;line-height:1.25}
+.q4-biz,.q4-offer{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.q4-biz{font-size:.76rem;color:var(--muted);line-height:1.35;margin-top:2px}
+.q4-meta{display:none;font-size:.76rem;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+.q4-offer{font-size:.82rem;line-height:1.35}
+.q4-money{text-align:right;font-size:.88rem;font-variant-numeric:tabular-nums}
+.q4-money span{display:block;font-size:.72rem;color:var(--muted)}
+.q4-send{font-size:.8rem;font-variant-numeric:tabular-nums;line-height:1.3}
+.q4-owner{font-size:.8rem;color:var(--muted);line-height:1.3}
+select.q4-status{width:100%;padding:6px 8px;font-size:.8rem;border:1px solid var(--line);background:var(--offwhite);border-radius:8px}
+select.q4-status.won{background:var(--mint);border-color:var(--teal);font-weight:600}
+select.q4-status.done{color:var(--muted)}
+.q4-main .chev{color:var(--muted);transition:transform .2s}
+.q4-row.open .q4-main .chev{transform:rotate(90deg)}
+.q4-detail{padding:2px 6px 22px 82px}
+.q4-say{background:var(--mint);border-radius:10px;padding:14px 16px;margin:4px 0 16px;font-size:.92rem;line-height:1.55}
+.q4-flag{background:#fcebe3;border:1px solid #f3c7b2;border-radius:10px;padding:10px 14px;margin:4px 0 12px;font-size:.86rem;line-height:1.5}
+.q4-k{font-size:.68rem;text-transform:uppercase;letter-spacing:.6px;font-weight:600;color:var(--muted);margin-bottom:3px}
+.q4-say .q4-k{color:var(--navy);opacity:.75}
+.q4-facts{display:grid;grid-template-columns:1fr 1fr;gap:14px 28px;font-size:.86rem;line-height:1.5}
+.q4-contact{margin:16px 0 4px;font-size:.86rem}
+.q4-track{display:grid;grid-template-columns:180px 1fr 1fr;gap:0 16px;margin-top:6px}
+.q4-track textarea{min-height:64px}
+.q4-track input[type=date]{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--offwhite);color:var(--ink)}
+.q4-banner{background:var(--peach);color:var(--navy);border-radius:10px;padding:10px 14px;font-size:.86rem;margin-bottom:16px}
+.q4-banner a{color:var(--navy);font-weight:600;text-decoration:underline}
+.q4-empty{padding:26px 6px;text-align:center;color:var(--muted);font-size:.88rem}
+.q4-connect{max-width:720px}
+.q4-connect p{font-size:.92rem;margin:8px 0}
+.q4-steps{margin:10px 0 0 18px;line-height:1.6}
+.q4-steps li{margin:4px 0}
+@media(max-width:900px){
+  .q4-hero{grid-template-columns:1fr}
+  .q4-tiles{grid-template-columns:repeat(2,1fr)}
+  .q4-main{grid-template-columns:26px 1fr 128px 10px;gap:10px}
+  .q4-rank,.q4-offer,.q4-money,.q4-send,.q4-owner{display:none}
+  .q4-meta{display:block}
+  .q4-detail{padding:2px 4px 20px}
+  .q4-facts,.q4-track{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .q4-fig{font-size:2.6rem}
+  .q4-main{grid-template-columns:26px 1fr 112px 8px}
+  .q4-due .why{display:none}
+}
 </style>
 </head>
 <body>
@@ -248,6 +338,7 @@ tr:last-child td{border-bottom:none}
     <button class="tab active" data-tab="overview">Overview</button>
     <button class="tab" data-tab="programs">Programs &amp; Events</button>
     <button class="tab" data-tab="leads">Leads</button>
+    <button class="tab" data-tab="q4">Q4 Pipeline</button>
     <button class="tab" data-tab="tasks">Tasks</button>
     <button class="tab" data-tab="content">Content</button>
     <button class="tab" data-tab="team">Team</button>
@@ -372,6 +463,78 @@ tr:last-child td{border-bottom:none}
     <h3>Manual Lead Pipeline</h3>
     <div class="card-sub">Drag-free kanban. Add a lead to any stage.</div>
     <div class="kanban" id="leadKanban"></div>
+  </div>
+</section>
+
+<!-- ============ Q4 PIPELINE ============ -->
+<!-- No lead data lives in this file. The tab reads the private tracker Sheet after a Google sign-in. -->
+<section class="panel" id="q4">
+  <div class="section-title">
+    <h2>Q4 Pipeline</h2><span class="sub">Live from your Q4 Revenue Reactivation Tracker</span>
+    <div class="q4-top-actions">
+      <span class="muted" id="q4Loaded"></span>
+      <button class="btn btn-sm btn-ghost" id="q4RefreshBtn" onclick="q4Refresh()" style="display:none">Refresh</button>
+      <a class="btn btn-sm btn-outline" id="q4SheetLink" href="#" target="_blank" rel="noopener" style="display:none">Open the Sheet</a>
+    </div>
+  </div>
+
+  <div class="card q4-connect" id="q4Gate"></div>
+
+  <div id="q4Body" style="display:none">
+    <div class="q4-banner" id="q4SampleBanner" style="display:none">You're looking at sample data with made-up names, and nothing here is saved. <a href="#" onclick="q4ExitSample();return false">Leave the preview</a></div>
+
+    <div class="q4-hero">
+      <div>
+        <div class="lbl">Expected new Q4 bookings</div>
+        <div class="q4-fig" id="q4Fig">—</div>
+        <div class="subline" id="q4Subline"></div>
+        <div class="fine">Planning estimates from your own records, not a forecast or a guarantee of results.</div>
+      </div>
+      <div class="q4-tiles">
+        <div class="q4-tile"><span class="lbl">Contacted</span><div class="v" id="q4Contacted">—</div><div class="s" id="q4ContactedS"></div></div>
+        <div class="q4-tile"><span class="lbl">Replied</span><div class="v" id="q4Replied">—</div><div class="s" id="q4RepliedS"></div></div>
+        <div class="q4-tile"><span class="lbl">Calls booked</span><div class="v" id="q4Booked">—</div><div class="s" id="q4BookedS"></div></div>
+        <div class="q4-tile"><span class="lbl">Won so far</span><div class="v" id="q4Won">—</div><div class="s" id="q4WonS"></div></div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-bottom:24px">
+      <div class="card">
+        <h3>Due now</h3>
+        <div class="card-sub">The send-by date is here and nothing has gone out yet</div>
+        <div id="q4DueList"></div>
+      </div>
+      <div class="card">
+        <h3>Progress by tier</h3>
+        <div class="card-sub">How many people in each tier have been contacted</div>
+        <div id="q4TierList"></div>
+        <div class="q4-side" id="q4Side"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Every lead</h3>
+      <div class="card-sub">Change a status here and it saves to the Sheet. Click a name to see what to say.</div>
+      <div class="q4-filters" role="toolbar" aria-label="Filter leads">
+        <span id="q4TierChips"></span>
+        <select id="q4Owner" aria-label="Owner" onchange="q4SetFilter('owner',this.value)">
+          <option value="all">Everyone</option>
+          <option value="Bunny">Bunny</option>
+          <option value="EA">EA</option>
+        </select>
+        <select id="q4StatusF" aria-label="Status" onchange="q4SetFilter('status',this.value)">
+          <option value="tosend">To send</option>
+          <option value="waiting">Waiting on them</option>
+          <option value="talking">In conversation</option>
+          <option value="done">Done</option>
+          <option value="all">Any status</option>
+        </select>
+        <button class="chip" id="q4DueChip" onclick="q4SetFilter('due',!Q4.f.due)">Due now only</button>
+        <input type="text" id="q4Search" placeholder="Search a name, business or offer" aria-label="Search leads" oninput="q4SetFilter('q',this.value)">
+      </div>
+      <div class="q4-count" id="q4Count"></div>
+      <div id="q4List"></div>
+    </div>
   </div>
 </section>
 
@@ -584,6 +747,30 @@ tr:last-child td{border-bottom:none}
     <div class="callout"><b>What this is:</b> Simplero and HubSpot block direct calls from a web page. This is the free Netlify proxy that fixes that. Paste the Netlify URL here and both pull through it, with the keys kept safe on Netlify. Setup steps are in the abp-dashboard-proxy README.</div>
   </div>
 
+  <!-- Q4 Pipeline -->
+  <div class="card settings-sec" id="q4Settings">
+    <h3>Q4 Pipeline (Google Sheets)</h3>
+    <span class="status"><span class="dot dot-off" id="stQ4"></span><span id="stQ4Txt">Not set</span></span>
+    <label for="q4ClientId">Google Client ID</label><input type="text" id="q4ClientId" placeholder="123456789012-abc123.apps.googleusercontent.com" autocomplete="off">
+    <label for="q4SheetIdInput">Tracker link</label><input type="text" id="q4SheetIdInput" placeholder="Paste the Q4 Revenue Reactivation Tracker link" autocomplete="off">
+    <div class="save-row">
+      <button class="btn btn-sm" onclick="saveQ4()">Save</button>
+      <button class="btn btn-sm btn-outline" onclick="q4Test()">Test Connection</button>
+      <button class="btn btn-sm btn-ghost" onclick="q4CopySetupLink()">Copy setup link for your EA</button>
+    </div>
+    <div class="callout"><b>Why it works this way:</b> this dashboard is public on GitHub, so your client list never goes into it. The Q4 tab signs in with Google and reads your private tracker Sheet only while the page is open. Anyone who can't open the Sheet sees nothing.</div>
+    <div class="callout"><b>One-time setup, about 10 minutes (Gino can do it):</b>
+      <ol class="q4-steps">
+        <li>Go to console.cloud.google.com and open the project you use for YouTube, or create a new one.</li>
+        <li>Open APIs &amp; Services, then Library. Search for Google Sheets API and click Enable.</li>
+        <li>Open APIs &amp; Services, then OAuth consent screen, then Get started. Name the app ABP Dashboard. For Audience, choose Internal if everyone signs in with a bunnyyoung.com Google account. Otherwise choose External, then add your Google email and your EA's as test users on the Audience tab.</li>
+        <li>Open the Clients tab, click Create client, pick Web application, and add <b>https://thebunnyyoung.github.io</b> under Authorized JavaScript origins. Click Create and copy the Client ID. You don't need the secret.</li>
+        <li>Paste the Client ID and the tracker link above, click Save, then Test Connection and sign in. If Google says the app isn't verified, click Continue. That's normal for a private app only your team uses.</li>
+        <li>Share the tracker with your EA as an Editor, then click Copy setup link for your EA and send it to them. Opening that link sets up their browser in one step.</li>
+      </ol>
+    </div>
+  </div>
+
   <!-- Goals -->
   <div class="card settings-sec">
     <h3>Goals</h3>
@@ -682,6 +869,7 @@ function go(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===name));
   window.scrollTo({top:0,behavior:'smooth'});
+  if(name==='q4') q4OnShow();
 }
 
 /* ================= PROGRAMS ================= */
@@ -1033,7 +1221,7 @@ async function syncPrograms(){
 function syncAll(){
   toast('Syncing all sources...');
   Promise.allSettled([
-    syncYoutube(),syncInstagram(),syncHubspot(),syncTrello(),syncSimplero(),syncPodcast(),syncPrograms()
+    syncYoutube(),syncInstagram(),syncHubspot(),syncTrello(),syncSimplero(),syncPodcast(),syncPrograms(),q4SyncQuiet()
   ]).then(()=>{
     const t=new Date().toLocaleString('en-US',{hour:'numeric',minute:'2-digit',month:'short',day:'numeric'});
     document.getElementById('lastSyncGlobal').textContent='Synced '+t;
@@ -1215,6 +1403,8 @@ function loadSettings(){
   set('goalEmail',K.goals.email);set('goalIg',K.goals.ig);set('goalPod',K.goals.podcast);set('goalYt',K.goals.youtube);
   set('proxyBase',K.proxyBase);
   if(K.proxyBase) setStatus('Proxy',true,'Set');
+  set('q4ClientId',K.q4ClientId);set('q4SheetIdInput',q4SheetUrl(K.q4SheetId));
+  q4SettingsStatus();
 }
 function saveProxy(){K.proxyBase=val('proxyBase').replace(/\/$/,'');saveKeys();setStatus('Proxy',!!K.proxyBase,K.proxyBase?'Set':'Not set');toast(K.proxyBase?'Proxy URL saved':'Proxy URL cleared');}
 const val=id=>document.getElementById(id).value.trim();
@@ -1230,6 +1420,446 @@ function saveGoals(){
   K.goals.podcast=Number(val('goalPod'))||K.goals.podcast;
   K.goals.youtube=Number(val('goalYt'))||K.goals.youtube;
   saveKeys();renderMetrics();toast('Goals saved');
+}
+
+/* ================= Q4 PIPELINE ================= */
+/* Lead data never lives in this file, in GitHub, or in browser storage. The tab signs in
+   with Google, reads the private Q4 Revenue Reactivation Tracker while the page is open,
+   and writes status changes straight back to that Sheet. Only the filter choices are
+   remembered in this browser. */
+const Q4_SCOPE='https://www.googleapis.com/auth/spreadsheets';
+const Q4_SHEET="'Priority Leads'";
+const Q4_STATUSES=['Not started','Drafted','Approved by Bunny','Sent','Replied','Call booked','Won','Not now','Lost','Do not contact'];
+const Q4_GROUPS={tosend:['Not started','Drafted','Approved by Bunny'],waiting:['Sent'],talking:['Replied','Call booked'],done:['Won','Not now','Lost','Do not contact']};
+const Q4_CONTACTED=['Sent','Replied','Call booked','Won','Not now','Lost'];
+const Q4_TIERS=['A','B','C','D'];
+const Q4_COLS={rank:'Rank',tier:'Tier',name:'Name',email:'Email',biz:'Business / niche',seg:'Segment',score:'Lead score (0-100)',
+  odds:'Q4 close odds',value:'Deal value ($)',ev:'Expected value ($)',offer:'Offer to lead with',say:'Follow-up notes: what to say',
+  owner:'Owner',channel:'Channel',sendBy:'Send by',happened:'What happened',ended:'How it ended / who owes whom',objection:'Objection',
+  ref:'Reference in the message',flags:'Flags',last:'Last touch',sources:'Sources',link:'Source link',status:'Status',sent:'Date sent',
+  reply:'Reply / outcome',mynotes:'Notes'};
+// What "Copy row for the EA prompt" copies: Name through Flags, minus the internal money columns.
+const Q4_COPY=['name','email','biz','seg','offer','say','owner','channel','sendBy','happened','ended','objection','ref','flags'];
+const Q4F_KEY='abp_q4_filters_v1';
+const Q4={rows:[],col:{},math:{},members:[],holdCount:null,token:null,tokenExp:0,loadedAt:0,sample:false,busy:false,open:new Set(),
+  f:Object.assign({tier:'all',owner:'all',status:'tosend',due:false,q:''},(()=>{try{const s=JSON.parse(localStorage.getItem(Q4F_KEY)||'{}');
+    const o={};if(s.tier)o.tier=s.tier;if(s.owner)o.owner=s.owner;if(s.status)o.status=s.status;return o;}catch(e){return {};}})())};
+
+/* ---- small helpers ---- */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function q4Set(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function q4Num(v){if(v===''||v==null)return null;if(typeof v==='number')return v;const n=Number(String(v).replace(/[$,%\s]/g,''));return isFinite(n)?n:null;}
+function q4Money(n,compact){
+  if(n==null||isNaN(n))return '—';
+  if(compact&&Math.abs(n)>=10000){const k=n/1000;return '$'+(Math.abs(k)>=100?Math.round(k):Math.round(k*10)/10)+'K';}
+  return '$'+Math.round(n).toLocaleString('en-US');
+}
+function q4Pct(p){if(p==null)return '—';const v=p*100;return (v>0&&v<10?Math.round(v*10)/10:Math.round(v))+'%';}
+function q4Iso(v){
+  if(v==null||v==='')return '';
+  if(typeof v==='number'&&v>20000&&v<80000)return new Date(Date.UTC(1899,11,30)+Math.round(v)*86400000).toISOString().slice(0,10);
+  const s=String(v).trim();
+  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m)return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m)return m[3]+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0');
+  return '';
+}
+function q4Today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function q4Days(iso){if(!iso)return null;const p=iso.split('-').map(Number);const a=new Date(p[0],p[1]-1,p[2]);const t=new Date();t.setHours(0,0,0,0);return Math.round((a-t)/86400000);}
+function q4Short(iso){if(!iso)return '';const p=iso.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function q4First(s){s=String(s||'').trim();const m=s.match(/^.+?[.!?](?=\s|$)/);return m?m[0]:s;}
+function q4ColL(i){let s='';i=i+1;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26);}return s;}
+function q4SheetIdFrom(s){s=String(s||'').trim();const m=s.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);return m?m[1]:s.replace(/[^a-zA-Z0-9_-]/g,'');}
+function q4SheetUrl(id){return id?'https://docs.google.com/spreadsheets/d/'+id+'/edit':'';}
+function q4Links(s){return String(s||'').split(/\s+/).filter(u=>/^https:\/\/[^\s"'<>]+$/i.test(u)).slice(0,4);}
+function q4Row(n){return Q4.rows.find(r=>r._row===n);}
+function q4Live(){return Q4.rows.filter(r=>Q4_TIERS.includes(r.tier));}
+function q4IsDue(r){const d=q4Days(r.sendIso);return Q4_GROUPS.tosend.includes(r.status)&&d!=null&&d<=2;}
+function q4Canon(v){v=String(v==null?'':v).trim();if(!v)return 'Not started';return Q4_STATUSES.find(s=>s.toLowerCase()===v.toLowerCase())||v;}
+
+/* ---- Google sign-in and the Sheets API ---- */
+function q4Token(){
+  return new Promise((resolve,reject)=>{
+    if(Q4.token&&Date.now()<Q4.tokenExp-60000)return resolve(Q4.token);
+    if(!K.q4ClientId)return reject(new Error('Add the Google Client ID in Settings first.'));
+    if(!(window.google&&google.accounts&&google.accounts.oauth2))return reject(new Error('Google sign-in is still loading. Give it a few seconds and try again.'));
+    const tc=google.accounts.oauth2.initTokenClient({client_id:K.q4ClientId,scope:Q4_SCOPE,
+      callback:r=>{
+        if(!r||r.error)return reject(new Error((r&&(r.error_description||r.error))||'Google sign-in did not finish.'));
+        Q4.token=r.access_token;Q4.tokenExp=Date.now()+(Number(r.expires_in)||3600)*1000;resolve(Q4.token);
+      },
+      error_callback:e=>reject(new Error(e&&e.type==='popup_closed'?'The Google window closed before sign-in finished.':
+        e&&e.type==='popup_failed_to_open'?'The browser blocked the Google sign-in window. Allow pop-ups for this site and try again.':'Google sign-in did not finish.'))});
+    tc.requestAccessToken({prompt:''});
+  });
+}
+async function q4Api(path,opts,retried){
+  const token=await q4Token();
+  const r=await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+encodeURIComponent(K.q4SheetId)+path,
+    Object.assign({},opts||{},{headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}}));
+  if(r.status===401&&!retried){Q4.token=null;return q4Api(path,opts,true);}
+  let j={};try{j=await r.json();}catch(e){}
+  if(!r.ok){
+    const msg=(j.error&&j.error.message)||('Google Sheets answered with error '+r.status+'.');
+    if(r.status===403||r.status===404)throw new Error(msg+' Check that this Google account can open the tracker Sheet.');
+    throw new Error(msg);
+  }
+  return j;
+}
+
+/* ---- loading and parsing ---- */
+async function q4Load(){
+  if(Q4.sample){q4Render();return;}
+  if(!K.q4ClientId||!K.q4SheetId){q4ShowGate('setup');return;}
+  if(Q4.busy)return;
+  Q4.busy=true;
+  const hadData=Q4.rows.length>0;
+  if(hadData)document.getElementById('q4Body').classList.add('q4-busy');else q4ShowGate('loading');
+  const opt='&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING';
+  const q=a=>a.map(r=>'ranges='+encodeURIComponent(r)).join('&');
+  try{
+    const main=await q4Api('/values:batchGet?'+q([Q4_SHEET+'!A1:AA600'])+opt);
+    q4Parse((main.valueRanges||[])[0]);
+    try{
+      const ex=await q4Api('/values:batchGet?'+q(["'Q4 Math'!A1:D40","'Member Renewals'!A1:G20","'Hold - Do Not Contact'!A2:A100"])+opt);
+      q4ParseExtra(ex.valueRanges||[]);
+    }catch(e){Q4.math={};Q4.members=[];Q4.holdCount=null;}
+    Q4.loadedAt=Date.now();
+    setStatus('Q4',true,'Connected');
+    q4Render();
+  }catch(e){
+    setStatus('Q4',false,'Error');
+    if(hadData)toast(e.message||String(e));else q4ShowGate('error',e.message||String(e));
+  }finally{
+    Q4.busy=false;document.getElementById('q4Body').classList.remove('q4-busy');
+  }
+}
+function q4Parse(vr){
+  const v=(vr&&vr.values)||[];
+  const head=(v[0]||[]).map(h=>String(h).trim());
+  const col={};Object.keys(Q4_COLS).forEach(k=>col[k]=head.indexOf(Q4_COLS[k]));
+  if(col.name<0||col.tier<0||col.status<0)throw new Error('That Sheet does not have the Priority Leads columns this tab expects. Check the tracker link in Settings.');
+  Q4.col=col;
+  Q4.rows=v.slice(1).map((r,i)=>{
+    const o={_row:i+2};
+    Object.keys(col).forEach(k=>{o[k]=(col[k]>=0&&r[col[k]]!=null)?r[col[k]]:'';});
+    o.tier=String(o.tier).trim();o.status=q4Canon(o.status);
+    o.value=q4Num(o.value);o.odds=q4Num(o.odds);o.ev=q4Num(o.ev);
+    o.sendIso=q4Iso(o.sendBy);o.sentIso=q4Iso(o.sent);
+    return o;
+  }).filter(o=>String(o.name).trim());
+}
+function q4ParseExtra(vrs){
+  const math=(vrs[0]&&vrs[0].values)||[],mem=(vrs[1]&&vrs[1].values)||[],hold=(vrs[2]&&vrs[2].values)||[];
+  const by={};math.forEach(r=>{if(r&&r[0]!=null)by[String(r[0]).trim()]=r;});
+  const pick=label=>by[label]?q4Num(by[label][1]):null;
+  Q4.math={expected:pick('Expected'),strong:pick('Strong execution'),
+    realLow:pick('Realistic Q4 total, expected'),realHigh:pick('Realistic Q4 total, strong execution')};
+  Q4.members=mem.slice(1).filter(r=>r&&r[0]).map(r=>({name:r[0],item:r[1]||'',value:q4Num(r[2]),odds:q4Num(r[3]),ev:q4Num(r[4])}));
+  Q4.holdCount=hold.filter(r=>r&&String(r[0]||'').trim()).length;
+}
+
+/* ---- the gate: setup, sign in, loading, error ---- */
+function q4Gate(html){
+  const g=document.getElementById('q4Gate');g.innerHTML=html;g.style.display=html?'block':'none';
+  document.getElementById('q4Body').style.display=html?'none':'block';
+  if(html){['q4RefreshBtn','q4SheetLink'].forEach(id=>document.getElementById(id).style.display='none');q4Set('q4Loaded','');}
+}
+function q4ShowGate(kind,msg){
+  const preview='<button class="btn btn-sm btn-ghost" onclick="q4StartSample()">Preview with sample data</button>';
+  if(kind==='loading'){q4Gate('<h3>Loading your tracker</h3><p class="muted">Reading the Sheet with your Google sign-in.</p>');return;}
+  if(kind==='error'){
+    q4Gate(`<h3>That didn't load</h3><p>${esc(msg)}</p>
+      <div class="save-row"><button class="btn btn-sm" onclick="q4Connect()">Try again</button><button class="btn btn-sm btn-outline" onclick="go('settings')">Check Settings</button></div>`);
+    return;
+  }
+  if(!(K.q4ClientId&&K.q4SheetId)){
+    q4Gate(`<h3>Connect your Q4 tracker</h3>
+      <p>Your client list stays in your private Google Sheet. This tab reads it after you sign in with Google, and every change you make here saves back to the Sheet. None of it is stored in this dashboard's code.</p>
+      <p class="muted">It needs a one-time Google setup, about 10 minutes. The steps are in Settings.</p>
+      <div class="save-row"><button class="btn btn-sm" onclick="q4GoSetup()">Set it up in Settings</button>${preview}</div>`);
+    return;
+  }
+  q4Gate(`<h3>Sign in to load your tracker</h3>
+    <p>Use the Google account that can open the Q4 Revenue Reactivation Tracker. Changes you make here save straight back to the Sheet.</p>
+    <div class="save-row"><button class="btn btn-sm" onclick="q4Connect()">Sign in with Google</button>${preview}</div>`);
+}
+function q4GoSetup(){go('settings');setTimeout(()=>{const s=document.getElementById('q4Settings');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});const i=document.getElementById('q4ClientId');if(i)i.focus({preventScroll:true});},350);}
+function q4Connect(){Q4.sample=false;q4Load();}
+function q4Refresh(){q4Load();}
+function q4OnShow(){
+  if(Q4.sample||Q4.rows.length){
+    q4Render();
+    if(!Q4.sample&&Date.now()-Q4.loadedAt>120000&&Q4.token&&Date.now()<Q4.tokenExp-60000)q4Load();
+    return;
+  }
+  q4ShowGate(K.q4ClientId&&K.q4SheetId?'signin':'setup');
+}
+function q4SyncQuiet(){
+  if(!Q4.sample&&Q4.rows.length&&Q4.token&&Date.now()<Q4.tokenExp-60000)return q4Load();
+  return Promise.resolve();
+}
+
+/* ---- rendering ---- */
+function q4Render(){
+  if(!Q4.sample&&!Q4.rows.length){q4ShowGate(K.q4ClientId&&K.q4SheetId?'signin':'setup');return;}
+  q4Gate('');
+  document.getElementById('q4SampleBanner').style.display=Q4.sample?'block':'none';
+  const link=document.getElementById('q4SheetLink');
+  if(!Q4.sample&&K.q4SheetId){link.href=q4SheetUrl(K.q4SheetId);link.style.display='';}
+  document.getElementById('q4RefreshBtn').style.display=Q4.sample?'none':'';
+  q4Set('q4Loaded',Q4.sample?'':'Loaded '+new Date(Q4.loadedAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));
+  q4RenderSummary();q4RenderList();
+}
+function q4StrongFallback(live){
+  const mult={A:1.5,B:1.5,C:1.25,D:1};
+  const leads=live.reduce((s,r)=>s+(r.value||0)*Math.min((r.odds||0)*(mult[r.tier]||1),mult[r.tier]>1?0.9:1),0);
+  return leads+Q4.members.reduce((s,m)=>s+(m.value||0)*Math.min((m.odds||0)*1.5,0.9),0);
+}
+function q4RenderSummary(){
+  const live=q4Live(),n=live.length;
+  const cnt=a=>live.filter(r=>a.includes(r.status)).length;
+  const contacted=cnt(Q4_CONTACTED),replied=cnt(['Replied','Call booked','Won']),booked=cnt(['Call booked','Won']);
+  const won=live.filter(r=>r.status==='Won'),wonVal=won.reduce((s,r)=>s+(r.value||0),0);
+  const evMem=Q4.members.reduce((s,m)=>s+(m.ev||0),0);
+  const evAll=live.reduce((s,r)=>s+(r.ev!=null?r.ev:(r.value||0)*(r.odds||0)),0)+evMem;
+  const expected=Q4.math.expected!=null?Q4.math.expected:evAll;
+  const strong=Q4.math.strong!=null?Q4.math.strong:q4StrongFallback(live);
+  q4Set('q4Fig',q4Money(expected));
+  const sub=[`<b>${q4Money(strong)}</b> with strong follow-through`];
+  if(Q4.math.realLow!=null&&Q4.math.realHigh!=null)sub.push(`<b>${q4Money(Q4.math.realLow)} to ${q4Money(Q4.math.realHigh)}</b> for the whole quarter, counting your plan`);
+  document.getElementById('q4Subline').innerHTML=sub.join('<br>');
+  q4Set('q4Contacted',contacted);q4Set('q4ContactedS','of '+n+' leads');
+  q4Set('q4Replied',replied);q4Set('q4RepliedS',contacted?Math.round(replied/contacted*100)+'% of those contacted':'No replies logged yet');
+  q4Set('q4Booked',booked);q4Set('q4BookedS','Calls and sessions on the calendar');
+  q4Set('q4Won',q4Money(wonVal,true));q4Set('q4WonS',won.length+(won.length===1?' deal closed':' deals closed'));
+
+  // Due now
+  const due=live.filter(q4IsDue).sort((a,b)=>a.sendIso<b.sendIso?-1:a.sendIso>b.sendIso?1:(q4Num(a.rank)||9999)-(q4Num(b.rank)||9999));
+  const dl=document.getElementById('q4DueList');
+  if(!due.length){dl.innerHTML='<div class="q4-empty">Nothing is due right now.</div>';}
+  else{
+    dl.innerHTML=due.slice(0,8).map(r=>{
+      const d=q4Days(r.sendIso);
+      const when=d<0?`<span class="late">${-d} ${d===-1?'day':'days'} late</span>`:d===0?'<span class="late">Due today</span>':'In '+d+(d===1?' day':' days');
+      return `<div class="q4-due" role="button" tabindex="0" onclick="q4Focus(${r._row})" onkeydown="if(event.key==='Enter'){q4Focus(${r._row})}">
+        <span class="tierpill t${esc(r.tier)}" title="Tier ${esc(r.tier)}">${esc(r.tier)}</span>
+        <div><div class="nm">${esc(r.name)}</div><div class="why">${esc(q4First(r.say))}</div></div>
+        <div class="when">${when}<br>${esc(r.owner)}</div></div>`;
+    }).join('')+(due.length>8?`<div class="q4-empty" style="padding:12px 6px"><a href="#" onclick="q4ShowAllDue();return false">See all ${due.length} that are due</a></div>`:'');
+  }
+
+  // Progress by tier
+  document.getElementById('q4TierList').innerHTML=Q4_TIERS.map(t=>{
+    const rs=live.filter(r=>r.tier===t);if(!rs.length)return '';
+    const c=rs.filter(r=>Q4_CONTACTED.includes(r.status)).length,pct=Math.round(c/rs.length*100);
+    const ev=rs.reduce((s,r)=>s+(r.ev||0),0);
+    return `<div class="q4-tier"><div class="row1"><span class="tierpill t${t}">${t}</span><span><b>${c}</b> of ${rs.length} contacted</span><span class="r">${q4Money(ev,true)} expected</span></div>
+      <div class="bar" role="img" aria-label="Tier ${t}: ${c} of ${rs.length} contacted"><span style="width:${pct}%"></span></div></div>`;
+  }).join('');
+  const side=[];
+  if(Q4.members.length)side.push(`${Q4.members.length} member renewal${Q4.members.length===1?' is':'s and upgrades are'} also open, ${q4Money(evMem)} expected. Those stay with Bunny and member experience.`);
+  if(Q4.holdCount!=null)side.push(`${Q4.holdCount} people are on the Hold tab and never get a message from this list.`);
+  document.getElementById('q4Side').textContent=side.join(' ');
+}
+function q4Match(r){
+  const f=Q4.f;
+  if(f.tier!=='all'&&r.tier!==f.tier)return false;
+  if(f.owner!=='all'&&!String(r.owner||'').trim().startsWith(f.owner))return false;
+  if(f.status!=='all'&&!(Q4_GROUPS[f.status]||[]).includes(r.status))return false;
+  if(f.due&&!q4IsDue(r))return false;
+  if(f.q){const s=f.q.toLowerCase();if(![r.name,r.biz,r.offer,r.email].some(v=>String(v||'').toLowerCase().includes(s)))return false;}
+  return true;
+}
+function q4RenderList(){
+  q4SyncFilterUI();
+  const live=q4Live().slice().sort((a,b)=>(q4Num(a.rank)||9999)-(q4Num(b.rank)||9999));
+  const rows=live.filter(q4Match);
+  q4Set('q4Count','Showing '+rows.length+' of '+live.length);
+  document.getElementById('q4List').innerHTML=rows.length?rows.map(q4RowHtml).join(''):'<div class="q4-empty">No leads match these filters.</div>';
+}
+function q4SetFilter(k,v){
+  Q4.f[k]=v;
+  if(k!=='q'&&k!=='due'){try{localStorage.setItem(Q4F_KEY,JSON.stringify({tier:Q4.f.tier,owner:Q4.f.owner,status:Q4.f.status}));}catch(e){}}
+  q4RenderList();
+}
+function q4SyncFilterUI(){
+  document.getElementById('q4TierChips').innerHTML=['all'].concat(Q4_TIERS).map(t=>
+    `<button class="chip${Q4.f.tier===t?' on':''}" aria-pressed="${Q4.f.tier===t}" onclick="q4SetFilter('tier','${t}')">${t==='all'?'All tiers':'Tier '+t}</button>`).join(' ');
+  document.getElementById('q4Owner').value=Q4.f.owner;
+  document.getElementById('q4StatusF').value=Q4.f.status;
+  const dc=document.getElementById('q4DueChip');dc.classList.toggle('on',!!Q4.f.due);dc.setAttribute('aria-pressed',!!Q4.f.due);
+  const s=document.getElementById('q4Search');if(s.value!==Q4.f.q)s.value=Q4.f.q;
+}
+function q4ShowAllDue(){Q4.f.due=true;Q4.f.status='tosend';q4RenderList();document.getElementById('q4Count').scrollIntoView({behavior:'smooth',block:'start'});}
+function q4Focus(n){
+  Q4.f.tier='all';Q4.f.owner='all';Q4.f.status='all';Q4.f.due=false;Q4.f.q='';
+  Q4.open.add(n);q4RenderList();
+  const el=document.getElementById('q4r'+n);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function q4RowHtml(r){
+  const open=Q4.open.has(r._row),d=q4Days(r.sendIso),pending=Q4_GROUPS.tosend.includes(r.status);
+  let send=r.sendIso?esc(q4Short(r.sendIso)):esc(r.sendBy||'');
+  if(r.sendIso&&pending&&d!=null&&d<=0)send+=d<0?` <span class="late">${-d}d late</span>`:' <span class="late">today</span>';
+  const cls=r.status==='Won'?' won':Q4_GROUPS.done.includes(r.status)?' done':'';
+  const list=Q4_STATUSES.includes(r.status)?Q4_STATUSES:Q4_STATUSES.concat([r.status]);
+  const opts=list.map(s=>`<option${s===r.status?' selected':''}>${esc(s)}</option>`).join('');
+  return `<div class="q4-row${open?' open':''}" id="q4r${r._row}">
+  <div class="q4-main" role="button" tabindex="0" aria-expanded="${open}" onclick="q4Toggle(${r._row})" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();q4Toggle(${r._row})}">
+    <span class="q4-rank">${esc(r.rank)}</span>
+    <span class="tierpill t${esc(r.tier)}" title="Tier ${esc(r.tier)}">${esc(r.tier)}</span>
+    <div><div class="q4-name">${esc(r.name)}</div><div class="q4-biz">${esc(r.biz)}</div>
+      <div class="q4-meta">${q4Money(r.value)} · ${q4Pct(r.odds)} · ${send}</div></div>
+    <div class="q4-offer">${esc(r.offer)}</div>
+    <div class="q4-money">${q4Money(r.value)}<span>${q4Pct(r.odds)} odds</span></div>
+    <div class="q4-send">${send}</div>
+    <div class="q4-owner">${esc(r.owner)}</div>
+    <select class="q4-status${cls}" aria-label="Status for ${esc(r.name)}" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()" onchange="q4SetStatus(${r._row},this.value)">${opts}</select>
+    <span class="chev" aria-hidden="true">›</span>
+  </div>
+  ${open?q4DetailHtml(r):''}
+</div>`;
+}
+function q4DetailHtml(r){
+  const fact=(k,v)=>v?`<div><div class="q4-k">${esc(k)}</div><div>${esc(v)}</div></div>`:'';
+  const last=q4Iso(r.last);
+  const links=q4Links(r.link).map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener">Source ${i+1}</a>`).join(' · ');
+  return `<div class="q4-detail">
+    ${r.flags?`<div class="q4-flag"><div class="q4-k">Flag</div>${esc(r.flags)}</div>`:''}
+    <div class="q4-say"><div class="q4-k">What to say</div>${esc(r.say||'No note yet.')}</div>
+    <div class="q4-facts">
+      ${fact('How it ended / who owes whom',r.ended)}${fact('What happened',r.happened)}
+      ${fact('Objection',r.objection)}${fact('Reference in the message',r.ref)}
+      ${fact('Offer to lead with',r.offer)}${fact('Channel',r.channel)}
+      ${fact('Segment',r.seg)}${fact('Last touch',last?q4Short(last)+', '+last.slice(0,4):r.last)}
+    </div>
+    <div class="q4-contact">${r.email?`<a href="mailto:${esc(r.email)}">${esc(r.email)}</a>`:'<span class="muted">No email on file</span>'}${links?' · '+links:''}</div>
+    <div class="q4-track">
+      <div><label for="q4sent${r._row}">Date sent</label><input type="date" id="q4sent${r._row}" value="${esc(r.sentIso)}" onchange="q4SetField(${r._row},'sent',this.value)"></div>
+      <div><label for="q4reply${r._row}">Reply / outcome</label><textarea id="q4reply${r._row}" onchange="q4SetField(${r._row},'reply',this.value)">${esc(r.reply)}</textarea></div>
+      <div><label for="q4notes${r._row}">Notes</label><textarea id="q4notes${r._row}" onchange="q4SetField(${r._row},'mynotes',this.value)">${esc(r.mynotes)}</textarea></div>
+    </div>
+    <div class="save-row">
+      <button class="btn btn-sm" onclick="q4CopyRow(${r._row})">Copy row for the EA prompt</button>
+      ${Q4_GROUPS.tosend.includes(r.status)?`<button class="btn btn-sm btn-ghost" onclick="q4MarkSent(${r._row})">Mark sent today</button>`:''}
+    </div>
+  </div>`;
+}
+function q4Toggle(n){if(Q4.open.has(n))Q4.open.delete(n);else Q4.open.add(n);q4ReplaceRow(n);}
+function q4ReplaceRow(n){const r=q4Row(n),el=document.getElementById('q4r'+n);if(r&&el)el.outerHTML=q4RowHtml(r);}
+
+/* ---- saving back to the Sheet ---- */
+async function q4Save(n,u){
+  const r=q4Row(n);if(!r)return;
+  if(Q4.sample){Object.assign(r,u);if('sent' in u)r.sentIso=q4Iso(u.sent);q4AfterSave(n,u);toast('Saved in the preview only');return;}
+  try{
+    // Confirm the row still holds the same person before writing, in case someone sorted the Sheet.
+    const chk=await q4Api('/values/'+encodeURIComponent(Q4_SHEET+'!'+q4ColL(Q4.col.name)+n));
+    const liveName=String((((chk.values||[])[0])||[])[0]||'').trim();
+    if(liveName!==String(r.name).trim()){toast('The Sheet changed since this page loaded, so nothing was saved. Reloading now.');await q4Load();return;}
+    const typed=[],raw=[];
+    Object.keys(u).forEach(k=>{const c=Q4.col[k];if(c==null||c<0)return;
+      (k==='reply'||k==='mynotes'?raw:typed).push({range:Q4_SHEET+'!'+q4ColL(c)+n,values:[[u[k]]]});});
+    if(typed.length)await q4Api('/values:batchUpdate',{method:'POST',body:JSON.stringify({valueInputOption:'USER_ENTERED',data:typed})});
+    if(raw.length)await q4Api('/values:batchUpdate',{method:'POST',body:JSON.stringify({valueInputOption:'RAW',data:raw})});
+    Object.assign(r,u);if('sent' in u)r.sentIso=q4Iso(u.sent);
+    q4AfterSave(n,u);toast('Saved to the Sheet');
+  }catch(e){toast('Not saved. '+(e.message||e));q4ReplaceRow(n);}
+}
+function q4AfterSave(n,u){q4RenderSummary();if('status' in u||'sent' in u)q4ReplaceRow(n);}
+function q4SetStatus(n,v){const r=q4Row(n);if(!r)return;const u={status:v};if(v==='Sent'&&!r.sentIso)u.sent=q4Today();q4Save(n,u);}
+function q4SetField(n,k,v){q4Save(n,{[k]:v});}
+function q4MarkSent(n){q4Save(n,{status:'Sent',sent:q4Today()});}
+function q4CopyRow(n){
+  const r=q4Row(n);if(!r)return;
+  const lines=Q4_COPY.map(k=>Q4_COLS[k]+': '+(k==='sendBy'?(r.sendIso||r.sendBy||''):(r[k]==null?'':r[k])));
+  lines.push('Bunny\'s "right now" line: ');
+  q4Clipboard(lines.join('\n'),'Row copied. Paste it under the prompt and add Bunny\'s "right now" line.');
+}
+function q4Clipboard(text,msg){
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy');}catch(e){}ta.remove();toast(ok?msg:'Copy did not work in this browser.');};
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(text).then(()=>toast(msg)).catch(fallback);else fallback();
+}
+
+/* ---- settings ---- */
+function q4SettingsStatus(){
+  const dot=document.getElementById('stQ4'),txt=document.getElementById('stQ4Txt');if(!dot)return;
+  if(Q4.rows.length&&!Q4.sample){dot.className='dot dot-on';txt.textContent='Connected';return;}
+  dot.className='dot dot-off';txt.textContent=(K.q4ClientId&&K.q4SheetId)?'Saved. Click Test Connection to sign in':'Not set';
+}
+function saveQ4(){
+  K.q4ClientId=val('q4ClientId');K.q4SheetId=q4SheetIdFrom(val('q4SheetIdInput'));saveKeys();
+  document.getElementById('q4SheetIdInput').value=q4SheetUrl(K.q4SheetId);
+  Q4.token=null;Q4.rows=[];Q4.sample=false;Q4.open=new Set();
+  q4SettingsStatus();
+  toast(K.q4ClientId&&K.q4SheetId?'Q4 Pipeline settings saved':'Add both the Client ID and the tracker link');
+}
+function q4Test(){
+  if(!K.q4ClientId||!K.q4SheetId){toast('Save the Client ID and the tracker link first');return;}
+  Q4.sample=false;
+  q4Load().then(()=>{if(Q4.rows.length){toast('Connected. '+q4Live().length+' leads loaded');go('q4');}});
+}
+function q4CopySetupLink(){
+  if(!K.q4ClientId||!K.q4SheetId){toast('Save the Client ID and the tracker link first');return;}
+  const code=btoa(JSON.stringify({c:K.q4ClientId,s:K.q4SheetId})).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  q4Clipboard(location.origin+location.pathname+'#q4setup='+code,'Setup link copied. Send it to your EA.');
+}
+function q4ReadSetupHash(){
+  const m=(location.hash||'').match(/^#q4setup=([A-Za-z0-9_-]+)/);if(!m)return;
+  try{
+    let b=m[1].replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';
+    const j=JSON.parse(atob(b));
+    if(j&&j.c&&j.s){K.q4ClientId=String(j.c).trim();K.q4SheetId=q4SheetIdFrom(j.s);saveKeys();loadSettings();}
+  }catch(e){}
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+  go('q4');
+  if(K.q4ClientId&&K.q4SheetId)toast('Q4 Pipeline is set up in this browser. Sign in with Google to load it.');
+}
+
+/* ---- preview with sample data (made-up people, nothing saved) ---- */
+function q4SampleRows(){
+  const t=new Date();
+  const day=k=>{const d=new Date(t.getFullYear(),t.getMonth(),t.getDate()+k);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+  const S=o=>Object.assign({rank:'',tier:'',name:'',email:'',biz:'',seg:'',score:'',odds:0,value:0,offer:'DEFY FIT call',say:'',owner:'EA',
+    channel:'EA drafts, Bunny approves',sendBy:'',happened:'',ended:'',objection:'',ref:'',flags:'',last:'',sources:'',link:'',status:'Not started',sent:'',reply:'',mynotes:''},o);
+  const rows=[
+    S({rank:1,tier:'A',name:'Dana Reyes (sample)',email:'dana@example.com',biz:'Retreat leader for women founders',seg:'Sales conversation, not closed',odds:.3,value:15000,
+      say:'She asked you to check back after her March retreat and the check-in never went out. Own that in one line, then ask how the retreat landed.',
+      owner:'Bunny',channel:'Bunny voice note',sendBy:day(-2),happened:'FIT call in February. Timing was the only thing in the way.',ended:'Bunny owed a one-month check-in that never went out.',
+      objection:'timing: after her March retreat',ref:'Her March retreat',last:day(-210)}),
+    S({rank:2,tier:'A',name:'Priya Lane (sample)',email:'priya@example.com',biz:'Leadership coach, current 1:1 client',seg:'Expansion (current client)',odds:.5,value:24000,offer:'2027 renewal',
+      say:'Her container ends in January. Open the renewal in your next session and ask what she wants 2027 to look like before you name a price.',owner:'Bunny',channel:'In session',
+      sendBy:day(0),status:'Drafted',ended:'No renewal conversation yet.',last:day(-12)}),
+    S({rank:3,tier:'B',name:'Morgan Ellis (sample)',email:'morgan@example.com',biz:'Nutrition coach',seg:'Warm, no sales call yet',odds:.08,value:15000,
+      say:'Bought the challenge VIP and asked when DEFY opens. Invite her to a FIT call and mention the replay she watched.',sendBy:day(1),ref:'The challenge replay',last:day(-40)}),
+    S({rank:4,tier:'B',name:'Jordan Kim (sample)',email:'jordan@example.com',biz:'Brand strategist',seg:'Win-back (former client)',odds:.1,value:11000,offer:'Alumni rate, January start',
+      say:'Celebrate the launch she ran after DEFY, then offer the alumni rate for a January start.',status:'Sent',sent:day(-3),sendBy:day(-5),last:day(-3)}),
+    S({rank:5,tier:'B',name:'Taylor Grant (sample)',email:'taylor@example.com',biz:'Therapist in private practice',seg:'Sales conversation, not closed',odds:.12,value:10000,offer:'VIP Day',
+      say:'She said yes to a VIP Day once her caseload settled. Ask if it has.',status:'Won',sent:day(-9),reply:'Booked the VIP Day for December.',sendBy:day(-10),last:day(-2)}),
+    S({rank:6,tier:'C',name:'Alex Moreno (sample)',email:'alex@example.com',biz:'Career coach',seg:'Sales conversation, not closed',odds:.04,value:15000,
+      say:'Money was the blocker in the spring. Ask what has changed since and mention the monthly plan once.',status:'Replied',sent:day(-6),reply:'Wants to talk after the holidays.',sendBy:day(-8)}),
+    S({rank:7,tier:'C',name:'Sam Patel (sample)',email:'sam@example.com',biz:'Wellness studio owner',seg:'Warm, no sales call yet',odds:.03,value:15000,
+      say:'Replied to a newsletter about burnout. Reference what she shared and offer a FIT call if there is a business goal.',sendBy:day(5)}),
+    S({rank:8,tier:'C',name:'Riley Brooks (sample)',email:'riley@example.com',biz:'Speaker and author',seg:'Corporate & speaking',odds:.05,value:12000,offer:'2027 speaking',
+      say:'Asked about a keynote for her association next spring. Send two dates for a scoping call.',status:'Call booked',sent:day(-4),sendBy:day(-6)}),
+    S({rank:9,tier:'C',name:'Quinn Avery (sample)',biz:'Doula and birth coach',seg:'Warm, no sales call yet',odds:.02,value:15000,
+      say:'Booked a FIT call that never happened. Warm check-in and an open door to rebook.',sendBy:day(-1),flags:'No email on file. Reply through LinkedIn messages instead.'}),
+    S({rank:10,tier:'D',name:'Casey Nguyen (sample)',email:'casey@example.com',biz:'Yoga teacher',seg:'Entry-offer buyer (nurture)',odds:.01,value:15000,offer:'WLAC 2027 VIP, then a DEFY FIT call',
+      say:'Bought an entry offer and never had a sales conversation. Add her to the personal WLAC 2027 invite list.',sendBy:'Next newsletter / WLAC 2027 invite'})
+  ];
+  rows.forEach((r,i)=>{r._row=i+2;r.ev=Math.round((r.value||0)*(r.odds||0));r.sendIso=q4Iso(r.sendBy);r.sentIso=q4Iso(r.sent);});
+  return rows;
+}
+function q4StartSample(){
+  Q4.sample=true;Q4.rows=q4SampleRows();Q4.math={};Q4.holdCount=3;Q4.open=new Set();Q4.loadedAt=Date.now();
+  Q4.members=[{name:'Sample member',item:'2027 renewal',value:11000,odds:.8,ev:8800}];
+  q4Render();
+}
+function q4ExitSample(){
+  Q4.sample=false;Q4.rows=[];Q4.members=[];Q4.math={};Q4.holdCount=null;Q4.open=new Set();
+  q4ShowGate(K.q4ClientId&&K.q4SheetId?'signin':'setup');
 }
 
 /* ================= INIT ================= */
@@ -1248,6 +1878,7 @@ function init(){
   renderChecklist('cinthyaCheck',CINTHYA_CHECK,'cinthyaCheck');
   renderAmplifiers();
   loadSettings();
+  q4ReadSetupHash(); // a setup link from Bunny pre-fills the Q4 Pipeline settings
   if(K.proxyBase) syncPrograms(); // pull live enrollment counts on load
 }
 init();

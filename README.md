@@ -1,6 +1,6 @@
 # A Better Place Consulting Dashboard
 
-The live business dashboard for A Better Place Consulting. One page, seven tabs, real API data, and a launch calendar the whole team can bookmark.
+The live business dashboard for A Better Place Consulting. One page, eight tabs, real API data, and a launch calendar the whole team can bookmark.
 
 ## What this is
 
@@ -57,6 +57,21 @@ A single-file dashboard (`index.html`) that pulls live numbers from YouTube, Ins
 3. Paste them into Settings, then Simplero.
 
 Simplero blocks direct browser calls with CORS. See the next section for the one-time proxy Gino sets up.
+
+### Q4 Pipeline (Google Sheets, private)
+The Q4 Pipeline tab shows the Q4 Revenue Reactivation Tracker: the ranked leads, what to say to each one, who owns it, and a Status you can change from the tab. Changes save straight back to the Sheet.
+
+This repo and the live page are public, so **no lead data ever goes into this repo**. The tab signs in with Google and reads the private Sheet only while the page is open. Nothing about the leads is saved in the browser. Anyone who can't open the Sheet sees a sign-in screen and nothing else.
+
+One-time setup, about 10 minutes:
+1. Go to console.cloud.google.com and open the project you use for YouTube, or create one.
+2. APIs & Services, then Library. Search for **Google Sheets API** and click Enable.
+3. APIs & Services, then **OAuth consent screen**, then Get started. App name: ABP Dashboard. Audience: **Internal** if everyone signs in with a bunnyyoung.com Google account. Otherwise **External**, then add Bunny's and the EA's Google emails as test users on the Audience tab.
+4. Clients tab, then Create client. Type: **Web application**. Under Authorized JavaScript origins add `https://thebunnyyoung.github.io`. Create it and copy the **Client ID**. No secret is needed.
+5. In the dashboard, Settings, then Q4 Pipeline: paste the Client ID and the tracker's link, click Save, then Test Connection and sign in. If Google says the app isn't verified, click Continue. That's normal for a private app.
+6. Share the tracker Sheet with the EA as an Editor. Then click **Copy setup link for your EA** and send it. Opening that link fills in the EA's settings in one step.
+
+What the tab writes: only the Status, Date sent, Reply / outcome and Notes columns of the Priority Leads tab, one cell at a time. Before every save it checks that the row still holds the same person, so sorting the Sheet can't put an update on the wrong row.
 
 ### Podcast
 - Apple Podcasts does not expose subscriber counts.
@@ -134,3 +149,7 @@ Pages redeploys on its own within a couple of minutes.
 4. Screenshot the **Overview** tab and send it to Bunny in Slack.
 
 That is the whole loop. Live numbers where the API allows, a fast manual pass everywhere else, one screenshot to Bunny.
+
+## Never put client data in this repo
+
+The repo and the GitHub Pages site are public. Client names, emails, notes and numbers stay in the Google Sheet. The Q4 Pipeline tab reads them live after a Google sign-in. Do not paste lead lists into `index.html`, the README, or any file you add here.
