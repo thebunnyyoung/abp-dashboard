@@ -359,6 +359,13 @@ select.q4-status.done{color:var(--muted)}
     <div class="hero-stat"><div class="num" id="hLeads">—</div><div class="lbl">Open Leads</div></div>
   </div>
 
+  <div class="card" id="mmCard" style="margin-bottom:24px">
+    <h3>Weekly Scoreboard</h3>
+    <div class="card-sub">From your private ABP Marketing Data sheet. Signs in with Google, nothing is stored here.</div>
+    <div id="mmBody"><div class="muted">Add the marketing sheet link in Settings, then sign in.</div></div>
+    <div class="save-row"><button class="btn btn-sm btn-outline" onclick="mmLoad()">Load scoreboard</button></div>
+  </div>
+
   <div class="grid grid-4" style="margin-bottom:24px">
     <div class="card">
       <h3>Email List</h3>
@@ -743,6 +750,7 @@ select.q4-status.done{color:var(--muted)}
     <h3>Data Proxy</h3>
     <span class="status"><span class="dot dot-off" id="stProxy"></span><span id="stProxyTxt">Not set</span></span>
     <label>Proxy Base URL</label><input type="text" id="proxyBase" placeholder="https://your-site.netlify.app">
+    <label for="proxyKey">Proxy key</label><input type="password" id="proxyKey" placeholder="The PROXY_KEY value set on Netlify" autocomplete="off">
     <div class="save-row"><button class="btn btn-sm" onclick="saveProxy()">Save</button></div>
     <div class="callout"><b>What this is:</b> Simplero and HubSpot block direct calls from a web page. This is the free Netlify proxy that fixes that. Paste the Netlify URL here and both pull through it, with the keys kept safe on Netlify. Setup steps are in the abp-dashboard-proxy README.</div>
   </div>
@@ -769,6 +777,14 @@ select.q4-status.done{color:var(--muted)}
         <li>Share the tracker with your EA as an Editor, then click Copy setup link for your EA and send it to them. Opening that link sets up their browser in one step.</li>
       </ol>
     </div>
+  </div>
+
+  <!-- Marketing data sheet -->
+  <div class="card settings-sec">
+    <h3>Weekly Scoreboard (Google Sheets)</h3>
+    <label for="mmSheetInput">ABP Marketing Data sheet link</label><input type="text" id="mmSheetInput" placeholder="Paste the ABP Marketing Data sheet link" autocomplete="off">
+    <div class="save-row"><button class="btn btn-sm" onclick="saveMm()">Save</button></div>
+    <div class="callout">Uses the same Google Client ID as Q4 Pipeline. The sheet stays private; anyone who can't open it sees nothing.</div>
   </div>
 
   <!-- Goals -->
@@ -860,6 +876,7 @@ if(!K){
   if(ch)localStorage.setItem(KEY_STORE,JSON.stringify(K));
 }catch(e){}})();
 function saveKeys(){localStorage.setItem(KEY_STORE,JSON.stringify(K));}
+function proxyOpts(){return K.proxyKey?{headers:{'X-ABP-Key':K.proxyKey}}:{};}
 
 /* ================= TABS ================= */
 document.querySelectorAll('.tab').forEach(t=>{
@@ -1100,7 +1117,7 @@ async function syncInstagram(){
   try{
     let followers;
     if(useProxy){
-      const r=await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/metricool`);
+      const r=await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/metricool`,proxyOpts());
       const j=await r.json();
       if(j.error||j.count==null) throw new Error(j.error||'no follower data');
       followers=Number(j.count);
@@ -1119,7 +1136,7 @@ async function syncHubspot(){
   if(!useProxy&&!K.hsToken){toast('Add HubSpot token first, or set a Proxy Base URL');document.getElementById('hsPipeline').innerHTML='<p class="muted">Not connected. Add your token in Settings.</p>';return;}
   try{
     const r=useProxy
-      ? await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/hubspot`)
+      ? await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/hubspot`,proxyOpts())
       : await fetch('https://api.hubapi.com/crm/v3/objects/deals?limit=100&properties=dealstage',{headers:{Authorization:'Bearer '+K.hsToken}});
     const j=await r.json();
     if(j.status==='error') throw new Error(j.message);
@@ -1157,7 +1174,7 @@ async function syncSimplero(){
   if(!useProxy&&!K.simpKey){toast('Add Simplero key, or set a Proxy Base URL');return;}
   try{
     const r=useProxy
-      ? await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/simplero?listId=${K.simpAlchemy}&status=active`)
+      ? await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/simplero?listId=${K.simpAlchemy}&status=active`,proxyOpts())
       : await fetch(`https://simplero.com/api/v1/lists/${K.simpAlchemy}/subscriptions?api_key=${K.simpKey}&status=active`);
     if(!r.ok) throw new Error('http');
     const j=await r.json();
@@ -1204,7 +1221,7 @@ async function syncPrograms(){
   for(const p of PROGRAMS){
     if(!p.simpleroListId) continue;
     try{
-      const r=await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/simplero?listId=${p.simpleroListId}`);
+      const r=await fetch(`${K.proxyBase.replace(/\/$/,'')}/.netlify/functions/simplero?listId=${p.simpleroListId}`,proxyOpts());
       const j=await r.json();
       if(j.count!=null){
         S.programs=S.programs||{};S.programs[p.id]=S.programs[p.id]||{};
@@ -1401,12 +1418,12 @@ function loadSettings(){
   set('trKey',K.trKey);set('trToken',K.trToken);set('trBoard',K.trBoard);
   set('podPlatform',K.podPlatform);set('podKey',K.podKey);set('podId',K.podId);set('podManual',K.podManual);set('podGoal',K.goals.podcast);
   set('goalEmail',K.goals.email);set('goalIg',K.goals.ig);set('goalPod',K.goals.podcast);set('goalYt',K.goals.youtube);
-  set('proxyBase',K.proxyBase);
+  set('proxyBase',K.proxyBase);set('proxyKey',K.proxyKey);set('mmSheetInput',q4SheetUrl(K.mmSheetId));
   if(K.proxyBase) setStatus('Proxy',true,'Set');
   set('q4ClientId',K.q4ClientId);set('q4SheetIdInput',q4SheetUrl(K.q4SheetId));
   q4SettingsStatus();
 }
-function saveProxy(){K.proxyBase=val('proxyBase').replace(/\/$/,'');saveKeys();setStatus('Proxy',!!K.proxyBase,K.proxyBase?'Set':'Not set');toast(K.proxyBase?'Proxy URL saved':'Proxy URL cleared');}
+function saveProxy(){K.proxyBase=val('proxyBase').replace(/\/$/,'');K.proxyKey=val('proxyKey');saveKeys();setStatus('Proxy',!!K.proxyBase,K.proxyBase?'Set':'Not set');toast(K.proxyBase?'Proxy URL saved':'Proxy URL cleared');}
 const val=id=>document.getElementById(id).value.trim();
 function saveYt(){K.ytKey=val('ytKey');K.ytChan=val('ytChan');K.goals.youtube=Number(val('ytGoal'))||K.goals.youtube;saveKeys();renderMetrics();toast('YouTube settings saved');}
 function saveIg(){K.igToken=val('igToken');K.igUser=val('igUser');K.goals.ig=Number(val('igGoal'))||K.goals.ig;saveKeys();renderMetrics();toast('Instagram settings saved');}
@@ -1860,6 +1877,38 @@ function q4StartSample(){
 function q4ExitSample(){
   Q4.sample=false;Q4.rows=[];Q4.members=[];Q4.math={};Q4.holdCount=null;Q4.open=new Set();
   q4ShowGate(K.q4ClientId&&K.q4SheetId?'signin':'setup');
+}
+
+/* ================= WEEKLY SCOREBOARD ================= */
+/* Reads Scoreboard!A1:E19 of the private ABP Marketing Data sheet with the viewer's own
+   Google sign-in (same client as Q4 Pipeline). Numbers are shown, never saved here. */
+function saveMm(){K.mmSheetId=q4SheetIdFrom(val('mmSheetInput'));saveKeys();
+  document.getElementById('mmSheetInput').value=q4SheetUrl(K.mmSheetId);toast(K.mmSheetId?'Scoreboard sheet saved':'Scoreboard sheet cleared');}
+function mmEsc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+async function mmLoad(){
+  const body=document.getElementById('mmBody');
+  if(!K.q4ClientId){body.innerHTML='<div class="muted">Add the Google Client ID under Q4 Pipeline in Settings first.</div>';return;}
+  if(!K.mmSheetId){body.innerHTML='<div class="muted">Add the ABP Marketing Data sheet link in Settings first.</div>';return;}
+  body.innerHTML='<div class="muted">Loading…</div>';
+  try{
+    const token=await q4Token();
+    const r=await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+encodeURIComponent(K.mmSheetId)+
+      '/values/'+encodeURIComponent('Scoreboard!A1:E19')+'?valueRenderOption=FORMATTED_VALUE',{headers:{Authorization:'Bearer '+token}});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error((j.error&&j.error.message)||('Google Sheets answered with error '+r.status+'.'));
+    const v=j.values||[];const row=label=>v.find(x=>x&&String(x[0]).trim()===label)||[];
+    const goal=(label)=>{const x=row(label);return '<div class="hero-stat"><div class="num">'+mmEsc(x[2])+' / '+mmEsc(x[1])+'</div><div class="lbl">'+mmEsc(label)+' ('+mmEsc(x[3])+' to go)</div></div>';};
+    const wk=['Instagram followers','Instagram reach','LinkedIn followers','YouTube subscribers','Sales booked ($)','Website active users (last 28 days)','Alchemy subscribers']
+      .map(l=>{const x=row(l);return '<tr><td>'+mmEsc(l)+'</td><td>'+mmEsc(x[1])+'</td><td>'+mmEsc(x[2])+'</td></tr>';}).join('');
+    const sp=['Open opportunities','Pitches sent, waiting on reply','Pitches drafted, not sent','Targets not yet pitched']
+      .map(l=>{const x=row(l);return '<tr><td>'+mmEsc(l)+'</td><td>'+mmEsc(x[1])+'</td><td>'+mmEsc(x[2])+'</td></tr>';}).join('');
+    const wkStart=row('Week starting');
+    body.innerHTML='<div class="hero" style="margin-bottom:16px">'+goal('DEFY members')+goal('Speaking events signed')+'</div>'+
+      '<table><thead><tr><th>Week of '+mmEsc(wkStart[1])+'</th><th>Value</th><th>Change</th></tr></thead><tbody>'+wk+'</tbody></table>'+
+      (wkStart[4]?'<div class="synced">'+mmEsc(row('Instagram followers')[4])+'</div>':'')+
+      '<table style="margin-top:16px"><thead><tr><th>Speaking pipeline</th><th>Count</th><th>Weighted ($)</th></tr></thead><tbody>'+sp+'</tbody></table>';
+    const d=row('DEFY members');if(d[2]&&document.getElementById('hDefy'))document.getElementById('hDefy').textContent=d[2];
+  }catch(e){body.innerHTML='<div class="muted">'+mmEsc(e.message||String(e))+'</div>';}
 }
 
 /* ================= INIT ================= */
