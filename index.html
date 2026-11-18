@@ -1137,6 +1137,7 @@ function renderMetrics(){
   if(ac)ac.style.display=[m.email,m.ig,m.podcast,m.youtube].some(v=>v!=null&&v!=='—')?'':'none';
   const dc=Number(progGet('defy','current',17)),dg=Number(progGet('defy','goal',50))||50;
   const db=document.getElementById('defyBar');if(db)db.style.width=Math.min(100,Math.round(dc/dg*100))+'%';
+  heroPaint();
 }
 function setMetricVal(k,v){S.metrics=S.metrics||{};S.metrics[k]=v;saveState();}
 
@@ -1279,10 +1280,9 @@ async function syncPrograms(){
 function syncAll(){
   Promise.allSettled([
     K.ytKey&&K.ytChan?syncYoutube():null,
-    K.igToken&&K.igUser?syncInstagram():null,
-    K.hsToken?syncHubspot():null,
+    syncInstagram(),syncHubspot(),
     K.trKey&&K.trToken&&K.trBoard?syncTrello():null,
-    K.simpKey&&K.simpAlchemy?syncSimplero():null,
+    K.simpAlchemy?syncSimplero():null,
     K.podKey||K.podManual?syncPodcast():null,
     syncPrograms(),q4SyncQuiet()
   ]).then(()=>{
@@ -1944,28 +1944,41 @@ function mmDelta(d,money){
 function mmHist(){try{return JSON.parse(localStorage.getItem(MM_HIST_KEY)||'[]')||[];}catch(e){return [];}}
 function mmSaveHist(vals){
   try{const today=new Date().toISOString().slice(0,10);
-    const h=mmHist().filter(x=>x&&x.day!==today);h.push({day:today,vals});
+    const all=mmHist();const old=(all.find(x=>x&&x.day===today)||{}).vals||{};const h=all.filter(x=>x&&x.day!==today);h.push({day:today,vals:Object.assign({},old,vals)});
     localStorage.setItem(MM_HIST_KEY,JSON.stringify(h.slice(-60)));}catch(e){}
 }
 const HERO_ITEMS=[
   ['DEFY members','DEFY members','goal'],['Speaking events signed','Speaking events','goal'],
   ['Instagram followers','Instagram','wk'],['YouTube subscribers','YouTube','wk'],
-  ['LinkedIn followers','LinkedIn','wk'],['Alchemy subscribers','Alchemy list','wk']];
-function heroRender(vals,deltas,asOf,goals){
+  ['Alchemy subscribers','Email list','wk'],['LinkedIn followers','LinkedIn','wk'],
+  ['Podcast subscribers','Podcast','live']];
+const HERO={vals:{},deltas:{},goals:{'DEFY members':'50','Speaking events signed':'12'},asOf:''};
+function heroLiveVals(){
+  const m=S.metrics||{},o={};const put=(k,v)=>{const n=mmNum(v);if(n!=null)o[k]=n;};
+  put('Instagram followers',m.ig);put('YouTube subscribers',m.youtube);put('Alchemy subscribers',m.email);put('Podcast subscribers',m.podcast);
+  put('DEFY members',progGet('defy','current',17));
+  return o;
+}
+function heroPaint(){
   const el=document.getElementById('heroNums');if(!el)return;
+  const live=heroLiveVals();const vals=Object.assign({},HERO.vals,live);
+  const today=new Date().toISOString().slice(0,10);
+  const prev=mmHist().filter(x=>x&&x.day<today).pop();
   const items=HERO_ITEMS.filter(([k])=>vals[k]!=null);
   if(!items.length){el.style.display='none';return;}
   el.innerHTML=items.map(([k,lbl])=>{
-    const g=goals&&goals[k]?' of '+mmEsc(goals[k]):'';
-    const d=deltas?deltas[k]:undefined;
+    let d=null;
+    if(prev&&prev.vals[k]!=null)d=vals[k]-prev.vals[k];else if(HERO.deltas[k]!=null)d=HERO.deltas[k];
+    const g=HERO.goals[k]?' of '+mmEsc(HERO.goals[k]):'';
     return '<div class="hero-stat"><div class="num">'+Number(vals[k]).toLocaleString('en-US')+'</div><div class="lbl">'+mmEsc(lbl)+g+'</div>'+
-      '<div class="delta">'+(d===undefined?'':mmDelta(d,false))+'</div></div>';}).join('');
+      '<div class="delta">'+(d==null?'':mmDelta(d,false))+'</div></div>';}).join('');
   el.style.display='';
-  document.getElementById('heroAsOf').textContent=asOf||'';
+  document.getElementById('heroAsOf').textContent=prev?'Arrows show the change since '+prev.day+'.':(HERO.asOf||'');
+  if(Object.keys(live).length)mmSaveHist(live);
 }
 function heroFromHistory(){
-  const last=mmHist().pop();if(!last)return;
-  heroRender(last.vals,null,'Last loaded '+last.day+'. Tap Refresh for today\'s numbers.',null);
+  const last=mmHist().pop();if(last)HERO.vals=Object.assign({},last.vals);
+  heroPaint();
 }
 function gSignedIn(){return !!(typeof Q4!=='undefined'&&Q4.token&&Date.now()<Q4.tokenExp-60000);}
 function gConnectState(kind,msg){
@@ -2029,11 +2042,12 @@ async function mmLoad(){
       (prev?'':'<div class="synced">Load it again on another day to see how much each number moved since today.</div>');
     mmSaveHist(now);
     document.getElementById('mmCard').style.display='';
-    const deltas={},goals={};
+    HERO.vals=Object.assign({},now);HERO.deltas={};
     HERO_ITEMS.forEach(([k,,kind])=>{const x=row(k);
-      if(kind==='goal'){goals[k]=x[1];if(prev){const dd=since(k,now[k]);if(dd!=null)deltas[k]=dd;}}
-      else{const w=(x[2]===undefined||x[2]==='')?null:mmNum(x[2]);if(w!=null)deltas[k]=w;}});
-    heroRender(now,deltas,'Week of '+(wkStart[1]||'')+(prev?'. Goal changes are since '+prev.day+'.':''),goals);
+      if(kind==='goal'){if(x[1])HERO.goals[k]=x[1];}
+      else if(kind==='wk'){const w=(x[2]===undefined||x[2]==='')?null:mmNum(x[2]);if(w!=null)HERO.deltas[k]=w;}});
+    HERO.asOf='Arrows show the change versus the week before '+(wkStart[1]||'last week')+'.';
+    heroPaint();
     const d=row('DEFY members');if(d[2]&&document.getElementById('hDefy'))document.getElementById('hDefy').textContent=d[2];
   }catch(e){body.innerHTML='<div class="muted">'+mmEsc(e.message||String(e))+'</div>';}
 }
@@ -2057,7 +2071,6 @@ function init(){
   q4ReadSetupHash(); // a setup link from Bunny pre-fills the Q4 Pipeline settings
   heroFromHistory();
   gConnectState(K.q4ClientId?(gSignedIn()?'ok':'idle'):'nosetup');
-  const hs=document.getElementById('hsCard');if(hs&&!K.hsToken)hs.style.display='none';
   const tr=document.getElementById('trCard');if(tr&&!(K.trKey&&K.trToken&&K.trBoard))tr.style.display='none';
   const lm=document.getElementById('lnkMm');if(lm)lm.href=q4SheetUrl(K.mmSheetId);
   const lq=document.getElementById('lnkQ4');if(lq)lq.href=q4SheetUrl(K.q4SheetId);
