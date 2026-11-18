@@ -46,6 +46,7 @@ a{color:var(--coral);text-decoration:none}
 .hero-stat .delta{font-size:.78rem;margin-top:7px;min-height:1.1em}
 .hero .mm-up{color:#9be3b9}.hero .mm-down{color:var(--peach)}.hero .mm-flat{color:var(--mint);opacity:.75;font-weight:400}
 .asof{color:var(--muted);font-size:.8rem;margin:-16px 4px 22px;text-align:right}
+.asof:empty{display:none}
 .src-list{list-style:none;margin:14px 0 4px;padding:0}
 .src-list li{padding:8px 0;border-top:1px solid var(--line);font-size:.92rem}
 .src-list li:first-child{border-top:none}
@@ -1968,7 +1969,8 @@ function heroFromHistory(){
 function gSignedIn(){return !!(typeof Q4!=='undefined'&&Q4.token&&Date.now()<Q4.tokenExp-60000);}
 function gConnectState(kind,msg){
   const box=document.getElementById('gConnect'),t=document.getElementById('gConnectTxt'),b=document.getElementById('gConnectBtn');
-  const st=document.getElementById('stG'),stt=document.getElementById('stGTxt');
+  const st=document.getElementById('stG'),stt=document.getElementById('stGTxt'),sb=document.getElementById('gSetBtn');
+  if(sb){sb.style.display=kind==='nosetup'?'none':'';sb.textContent=kind==='ok'?'Refresh numbers':'Sign in with Google';}
   if(kind==='ok'){box.style.display='none';if(st)st.className='dot dot-on';if(stt)stt.textContent='Signed in';return;}
   box.style.display='';b.disabled=false;b.style.display='';
   if(kind==='nosetup'){t.textContent='Google sign-in isn\'t switched on for this dashboard yet. It\'s a one-time step, and then your numbers load with one tap.';b.style.display='none';
