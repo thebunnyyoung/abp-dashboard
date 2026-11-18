@@ -38,6 +38,7 @@ h1{font-size:2rem}
 h2{font-size:1.6rem}
 h3{font-size:1.3rem}
 a{color:var(--coral);text-decoration:none}
+.mm-up{color:#2f7d5b;font-weight:600}.mm-down{color:var(--coral);font-weight:600}.mm-flat{color:var(--muted)}
 button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none}
 input,textarea,select{font-family:'DM Sans',sans-serif;font-size:.95rem}
 
@@ -361,7 +362,7 @@ select.q4-status.done{color:var(--muted)}
 
   <div class="card" id="mmCard" style="margin-bottom:24px">
     <h3>Weekly Scoreboard</h3>
-    <div class="card-sub">From your private ABP Marketing Data sheet. Signs in with Google, nothing is stored here.</div>
+    <div class="card-sub">From your private ABP Marketing Data sheet. Green is up, coral is down: once versus last week, once since the last day you loaded it here.</div>
     <div id="mmBody"><div class="muted">Add the marketing sheet link in Settings, then sign in.</div></div>
     <div class="save-row"><button class="btn btn-sm btn-outline" onclick="mmLoad()">Load scoreboard</button></div>
   </div>
@@ -1885,6 +1886,22 @@ function q4ExitSample(){
 function saveMm(){K.mmSheetId=q4SheetIdFrom(val('mmSheetInput'));saveKeys();
   document.getElementById('mmSheetInput').value=q4SheetUrl(K.mmSheetId);toast(K.mmSheetId?'Scoreboard sheet saved':'Scoreboard sheet cleared');}
 function mmEsc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+/* Growth: each load keeps one snapshot per day in this browser (numbers only, last 60 days),
+   so the card can show the change since the last earlier day you loaded it. */
+const MM_HIST_KEY='abp_mm_history';
+function mmNum(v){const n=parseFloat(String(v==null?'':v).replace(/[$,\s]/g,''));return isFinite(n)?n:null;}
+function mmDelta(d,money){
+  if(d==null)return '<span class="mm-flat">n/a</span>';
+  if(d===0)return '<span class="mm-flat">no change</span>';
+  const a=Math.abs(d).toLocaleString('en-US',{maximumFractionDigits:0});
+  return '<span class="'+(d>0?'mm-up':'mm-down')+'">'+(d>0?'&#9650; +':'&#9660; -')+(money?'$':'')+a+'</span>';
+}
+function mmHist(){try{return JSON.parse(localStorage.getItem(MM_HIST_KEY)||'[]')||[];}catch(e){return [];}}
+function mmSaveHist(vals){
+  try{const today=new Date().toISOString().slice(0,10);
+    const h=mmHist().filter(x=>x&&x.day!==today);h.push({day:today,vals});
+    localStorage.setItem(MM_HIST_KEY,JSON.stringify(h.slice(-60)));}catch(e){}
+}
 async function mmLoad(){
   const body=document.getElementById('mmBody');
   if(!K.q4ClientId){body.innerHTML='<div class="muted">Add the Google Client ID under Q4 Pipeline in Settings first.</div>';return;}
@@ -1897,16 +1914,29 @@ async function mmLoad(){
     const j=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error((j.error&&j.error.message)||('Google Sheets answered with error '+r.status+'.'));
     const v=j.values||[];const row=label=>v.find(x=>x&&String(x[0]).trim()===label)||[];
-    const goal=(label)=>{const x=row(label);return '<div class="hero-stat"><div class="num">'+mmEsc(x[2])+' / '+mmEsc(x[1])+'</div><div class="lbl">'+mmEsc(label)+' ('+mmEsc(x[3])+' to go)</div></div>';};
-    const wk=['Instagram followers','Instagram reach','LinkedIn followers','YouTube subscribers','Sales booked ($)','Website active users (last 28 days)','Alchemy subscribers']
-      .map(l=>{const x=row(l);return '<tr><td>'+mmEsc(l)+'</td><td>'+mmEsc(x[1])+'</td><td>'+mmEsc(x[2])+'</td></tr>';}).join('');
-    const sp=['Open opportunities','Pitches sent, waiting on reply','Pitches drafted, not sent','Targets not yet pitched']
-      .map(l=>{const x=row(l);return '<tr><td>'+mmEsc(l)+'</td><td>'+mmEsc(x[1])+'</td><td>'+mmEsc(x[2])+'</td></tr>';}).join('');
+    const today=new Date().toISOString().slice(0,10);
+    const prev=mmHist().filter(x=>x&&x.day<today).pop();
+    const since=(label,cur)=>{if(!prev)return null;const p=prev.vals[label];return (p==null||cur==null)?null:cur-p;};
+    const now={};
+    const goalLabels=['DEFY members','Speaking events signed'];
+    const wkLabels=['Instagram followers','Instagram reach','LinkedIn followers','YouTube subscribers','Sales booked ($)','Website active users (last 28 days)','Alchemy subscribers'];
+    const spLabels=['Open opportunities','Pitches sent, waiting on reply','Pitches drafted, not sent','Targets not yet pitched'];
+    const goal=(label)=>{const x=row(label);const cur=mmNum(x[2]);now[label]=cur;const d=since(label,cur);
+      return '<div class="hero-stat"><div class="num">'+mmEsc(x[2])+' / '+mmEsc(x[1])+'</div><div class="lbl">'+mmEsc(label)+' ('+mmEsc(x[3])+' to go)'+
+        (prev?'<br>'+mmDelta(d,false)+' since '+mmEsc(prev.day):'')+'</div></div>';};
+    const wk=wkLabels.map(l=>{const x=row(l);const cur=mmNum(x[1]);now[l]=cur;const money=l.indexOf('$')>=0;
+      const wow=(x[2]===undefined||x[2]==='')?null:mmNum(x[2]);
+      return '<tr><td>'+mmEsc(l)+'</td><td>'+mmEsc(x[1])+'</td><td>'+mmDelta(wow,money)+'</td><td>'+(prev?mmDelta(since(l,cur),money):'<span class="mm-flat">next time</span>')+'</td></tr>';}).join('');
+    const sp=spLabels.map(l=>{const x=row(l);const cur=mmNum(x[1]);now[l]=cur;
+      return '<tr><td>'+mmEsc(l)+'</td><td>'+mmEsc(x[1])+'</td><td>'+mmEsc(x[2])+'</td><td>'+(prev?mmDelta(since(l,cur),false):'<span class="mm-flat">next time</span>')+'</td></tr>';}).join('');
     const wkStart=row('Week starting');
-    body.innerHTML='<div class="hero" style="margin-bottom:16px">'+goal('DEFY members')+goal('Speaking events signed')+'</div>'+
-      '<table><thead><tr><th>Week of '+mmEsc(wkStart[1])+'</th><th>Value</th><th>Change</th></tr></thead><tbody>'+wk+'</tbody></table>'+
+    const sinceHead=prev?'Since '+mmEsc(prev.day):'Since last look';
+    body.innerHTML='<div class="hero" style="margin-bottom:16px">'+goalLabels.map(goal).join('')+'</div>'+
+      '<table><thead><tr><th>Week of '+mmEsc(wkStart[1])+'</th><th>Value</th><th>Vs last week</th><th>'+sinceHead+'</th></tr></thead><tbody>'+wk+'</tbody></table>'+
       (wkStart[4]?'<div class="synced">'+mmEsc(row('Instagram followers')[4])+'</div>':'')+
-      '<table style="margin-top:16px"><thead><tr><th>Speaking pipeline</th><th>Count</th><th>Weighted ($)</th></tr></thead><tbody>'+sp+'</tbody></table>';
+      '<table style="margin-top:16px"><thead><tr><th>Speaking pipeline</th><th>Count</th><th>Weighted ($)</th><th>'+sinceHead+'</th></tr></thead><tbody>'+sp+'</tbody></table>'+
+      (prev?'':'<div class="synced">Load it again on another day to see how much each number moved since today.</div>');
+    mmSaveHist(now);
     const d=row('DEFY members');if(d[2]&&document.getElementById('hDefy'))document.getElementById('hDefy').textContent=d[2];
   }catch(e){body.innerHTML='<div class="muted">'+mmEsc(e.message||String(e))+'</div>';}
 }
